@@ -1,0 +1,51 @@
+# SignalFlow JupyterHub Environment Configuration Guide
+
+This guide provides a step-by-step process on how to configure your environment for the SignalFlow JupyterHub Docker container using the `.env` file. 
+
+## Step 1: Download the `.env` File
+
+Download the `.env` template file from the GitHub repository and place it in the root directory of your project.
+
+## Step 2: Edit the `.env` File
+
+Open the `.env` file in a text editor of your choice. You will see several lines of configuration options, each of which are explained below:
+
+- **Docker Configuration**
+  - `CONTAINER_NAME`: The name you want to assign to your Docker container.
+  - `IMAGE_NAME`: The name of your Docker image.
+
+- **Resource Configuration**
+  - `CPU_LIMIT`: The maximum limit for CPU usage. This should be a value between 0.01 and 1, where 1 corresponds to 100% of CPU.
+  - `MEM_LIMIT`: The maximum limit for Memory usage in megabytes.
+
+- **Jupyter Notebook Configuration**
+  - `NB_USER`: The user name for the Jupyter Notebook.
+  - `PASSWORD`: The password for the Jupyter Notebook.
+  - `WEB_PORT`: The port number to access the web interface of your application.
+
+- **Paths Configuration**
+  - `STORAGE_FOLDER`: The path to the storage folder on your local machine.
+  - `HOME_FOLDER`: The path to the home folder on your local machine.
+  - `DROPBOX_FOLDER`: The path to the Dropbox folder on your local machine.
+
+- **API Keys Configuration**
+  - `OPENAI_API_KEY`: Your OpenAI API key.
+
+- **MATLAB Licensing Specifics**
+  - `HOSTNAME`: The hostname for your container.
+  - `MAC_ADDRESS`: The MAC address for your container. This is required for certain types of MATLAB licensing.
+  - `MATLAB_LICENSE_FILE`: The path to your MATLAB license file.
+
+Replace the placeholder text after the `=` sign with your actual values for each option.
+
+## Step 3: Save the `.env` File
+
+After you have entered your configurations, save the `.env` file.
+
+## Step 4: Run Your Docker Container
+
+You can now run your Docker container. The configurations you entered in the `.env` file will be automatically loaded when you start your Docker container.
+
+---
+
+Remember, never share your `.env` file or commit it to a public repository, as it may contain sensitive data like passwords or API keys.
