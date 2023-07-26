@@ -2,6 +2,8 @@
 
 This Docker image comes with MATLAB and MATLAB Integration for Jupyter (VNC) installed on a base image of `jupyter/base-notebook`.
 
+![Launcher Image](sf-jupyterhub-launcher.png)
+
 ## Features
 - MATLAB release: `r2023a` (configurable)
 - MATLAB products: `MATLAB`, `Parallel_Computing_Toolbox`, `Image_Processing_Toolbox`, `Signal_Processing_Toolbox`, `Optimization_Toolbox`, `Statistics_and_Machine_Learning_Toolbox`, `Wavelet_Toolbox` (configurable)
