@@ -26,26 +26,9 @@ This Docker image comes with MATLAB and MATLAB Integration for Jupyter (VNC) ins
     ```
 4. Open your web browser and navigate to `http://localhost:8888`. You should see the JupyterLab interface.
 
-## Building the Docker Image Locally
-
-If you want to build the Docker image on your own machine, you can do so with the following command:
-docker build --build-arg MATLAB_RELEASE=r2023a
---build-arg MATLAB_PRODUCT_LIST="MATLAB Deep_Learning_Toolbox Symbolic_Math_Toolbox"
---build-arg LICENSE_SERVER=12345@hostname.com
--t signalflow-jupyterhub .
-
-Replace `MATLAB_RELEASE`, `MATLAB_PRODUCT_LIST`, `LICENSE_SERVER`, and `signalflow-jupyterhub` with your own values.
-
 ## License
 
 This project is licensed under the terms of the MIT License.
 
 ## Maintainer
 This project is maintained by Ernest Pedapati (ernest.pedapati@cchmc.org).
-
-## R and RStudio Support
-This Docker image includes a comprehensive R environment with many popular packages preinstalled. It also includes a preconfigured RStudio Server environment that you can access from JupyterLab.
-
-## JupyterLab AI Capabilities
-This Docker image includes `jupyter_ai` and `openai` which enable AI capabilities in JupyterLab with API key.
-
