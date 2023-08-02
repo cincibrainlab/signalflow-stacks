@@ -1,32 +1,43 @@
-# SignalFlow JupyterHub Docker Image
+# SignalFlow Development
+## SignalFlow Docker Stacks
 
-This Docker image comes with MATLAB and MATLAB Integration for Jupyter (VNC) installed on a base image of `jupyter/base-notebook`.
+This stack uses a newer base operating system (Debian 12) with a more advanced VNC platform (KASM). This container attempts to (but not yet successful) have successful interactive Jupyter notebook MNE plots.
 
-![Launcher Image](sf-jupyterhub-launcher.png)
+![dev-launcher ](signalflow-dev-screenshot.png)
+
+
+## Quick Start
+Example:
+```
+docker run -e JUPYTER_TOKEN="welcome" -p 3000:3000 cincibrainlab/signalflow-development
+```
+
+DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-development/general
+
 
 ## Features
-- MATLAB release: `r2023a` (configurable)
-- MATLAB products: `MATLAB`, `Parallel_Computing_Toolbox`, `Image_Processing_Toolbox`, `Signal_Processing_Toolbox`, `Optimization_Toolbox`, `Statistics_and_Machine_Learning_Toolbox`, `Wavelet_Toolbox` (configurable)
-- Network License Server support
-- VNC support for MATLAB Integration for Jupyter
-- VSCode Server support
-- Jupyter Notebook extensions & packages
-- RStudio support
-- JupyterLab with AI capabilities (via `jupyter_ai` and `openai`)
-- All applications proxied through a single port (default: 8888)
+Provides a full Linux desktop environment with Xfce, a scientific computing environment with Matlab and R, document authoring tools like Quarto, and developer tools - preconfigured for convenience on an academic research computing platform.
 
-## How to Use This Docker Image
+- Base image: linuxserver/baseimage-kasmvnc:debianbookworm 
+- Installs packages: 
+  - Xfce desktop environment, Chromimum, Matlab, R, RStudio, Quarto, Pandoc, VSCode, GitHub Desktop, GitKraken
+- Configures Matlab R2023a with key toolboxes
+- Installs R 4.3 and key R packages like tidyverse, pacman, quarto
+- Configures locale, installs texlive for PDF rendering
+- Installs developer tools like VSCode, GitHub Desktop, GitKraken
+- Installs helpful packages like imagemagick, inkscape, zip/unzip
+- Configures `.desktop` files for no-sandbox mode for security
+- Creates `matlab` user with sudo permissions for convenience
+- Exposes port 3000 and sets up volume at `/config`
 
-1. Install Docker on your machine. Follow the instructions at [Docker's official website](https://docs.docker.com/get-docker/).
-2. Pull the Docker image from Docker Hub:
-    ```
-    docker pull cincibrainlab/signalflow-jupyterhub
-    ```
-3. Run the Docker container:
-    ```
-    docker run -p 8888:8888 cincibrainlab/signalflow-jupyterhub
-    ```
-4. Open your web browser and navigate to `http://localhost:8888`. You should see the JupyterLab interface.
+*Matlab Toolboxes installed suitable for HAPPE, MADE pipelines*
+- Parallel Computing Toolbox
+- Image Processing Toolbox  
+- Signal Processing Toolbox
+- Image Processing Toolbox
+- Optimization Toolbox
+- Statistics and Machine Learning Toolbox
+- Wavelet Toolbox
 
 ## License
 
