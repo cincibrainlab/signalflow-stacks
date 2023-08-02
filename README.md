@@ -1,32 +1,38 @@
-# SignalFlow JupyterHub Docker Image
+# Signalflow Docker Stacks for EEG Analysis
 
-This Docker image comes with MATLAB and MATLAB Integration for Jupyter (VNC) installed on a base image of `jupyter/base-notebook`.
+SignalFlow Docker Stacks are ready-to-run workstation Docker images contain the big "three" platforms for EEG analysis: MATLAB, Python, and R. When active the images allow browser access to either a full desktop experience or web-based notebooks. All applications can access the same underlying file volumes.
 
-![Launcher Image](sf-jupyterhub-launcher.png)
+The source files for each image are available and drawn from other opensource projects to adapt them to your labs specific purpose.
 
-## Features
-- MATLAB release: `r2023a` (configurable)
-- MATLAB products: `MATLAB`, `Parallel_Computing_Toolbox`, `Image_Processing_Toolbox`, `Signal_Processing_Toolbox`, `Optimization_Toolbox`, `Statistics_and_Machine_Learning_Toolbox`, `Wavelet_Toolbox` (configurable)
-- Network License Server support
-- VNC support for MATLAB Integration for Jupyter
-- VSCode Server support
-- Jupyter Notebook extensions & packages
-- RStudio support
-- JupyterLab with AI capabilities (via `jupyter_ai` and `openai`)
-- All applications proxied through a single port (default: 8888)
+## Quick Start:
 
-## How to Use This Docker Image
+## Selecting an Image:
 
-1. Install Docker on your machine. Follow the instructions at [Docker's official website](https://docs.docker.com/get-docker/).
-2. Pull the Docker image from Docker Hub:
-    ```
-    docker pull cincibrainlab/signalflow-jupyterhub
-    ```
-3. Run the Docker container:
-    ```
-    docker run -p 8888:8888 cincibrainlab/signalflow-jupyterhub
-    ```
-4. Open your web browser and navigate to `http://localhost:8888`. You should see the JupyterLab interface.
+We maintain a set of image definitions in the cincibrainlab/signalflow-stacks GitHub repository. The main images have distinct progenitors and will eventually be combined.
+
+![SF panel](sf-stacks-panel.png)
+
+Container images are hosted on [CinciBrainLab DockerHub Repository](https://hub.docker.com/repositories/cincibrainlab).
+
+### Signalflow-Datascience
+
+`cincibrainlab/signaflow-datascience` is a comprehensive image which contains a web-based interface to Jupyter Hub with access to a full virtual desktop with MATLAB, RStudio, and Visual Studio Code. The base image is derived from `jupyter/scipy-notebook:ubuntu-20.04` in which a XFCE4 desktop `MATLAB 2023a` has been installed and can be accessed through NOVNC following Mathworks recommendations. Authentication is handled by Jupyter Hub token though a single port (default: 8888) (NOVNC desktop is proxied). In addition, desktop version of Rstudio, VSCode, and Libreoffice are available alongside Mathworks.
+
+### Signalflow-MNE
+
+`cincibrainlab/signaflow-mne`
+
+### Signalflow-Development
+
+`cincibrainlab/signalflow-development`
+
+### Signalflow-SecurityMod
+
+`cincibrainlab/signalflow-securitymod` can be built to add various sensitive institution or personal information. This may include ssl-certs, API keys, login information, or scripts or code that otherwise would not be permamently contained within the main images. Source for these images are suitable for a private repository.
+
+### Signalflow-Templates
+
+`signalflow-templates` a single container that contains templates for docker-compose, dockerfiles, scripts that may be useful
 
 ## License
 
