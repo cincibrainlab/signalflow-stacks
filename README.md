@@ -1,4 +1,4 @@
-# Signalflow Docker Stacks for EEG Analysis
+# Signalflow Docker Stacks for EEG / ML / Signal Analysis
 
 SignalFlow Docker Stacks are ready-to-run workstation Docker images contain the big "three" platforms for EEG analysis: MATLAB, Python, and R. When active the images allow browser access to either a full desktop experience or web-based notebooks. All applications can access the same underlying file volumes.
 
