@@ -16,7 +16,7 @@ services:
     hostname: ${HOSTNAME}
     mac_address: ${MAC_ADDRESS}
     ports:
-      - "${WEBPORT}:6901"
+      - "${WEB_PORT}:6901"
     volumes:
       - ${LOCAL_STORAGE}:/srv
       - ${CERTS_DIR}:/usr/local/share/ca-certificates/
