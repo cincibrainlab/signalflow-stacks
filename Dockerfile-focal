@@ -4,6 +4,8 @@ FROM kasmweb/$BASE_IMAGE:$BASE_TAG
 
 USER root
 
+ENV NB_USER kasm-user
+
 ENV HOME /home/kasm-default-profile
 ENV STARTUPDIR /dockerstartup
 WORKDIR $HOME
@@ -36,12 +38,201 @@ RUN \
   $STARTUPDIR/set_user_permission.sh $HOME && \
   rm -f /etc/X11/xinit/Xclients && \
   chown 1000:0 $HOME && \
-  mkdir -p /home/kasm-user && \
-  chown -R 1000:0 /home/kasm-user && \
+  mkdir -p /home/$NB_USER && \
+  chown -R 1000:0 /home/$NB_USER && \
   rm -Rf ${INST_DIR}
 
+RUN echo "${NB_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/$NB_USER
+
+
+######### START CUSTOMIZATION ########
+
+RUN sudo apt update && sudo apt install pipx -y
+RUN pipx ensurepath
+RUN which pipx
+RUN alias pip3=/usr/bin/pipx
+RUN alias pip=/usr/bin/pipx
+
+# install apt packages
+RUN apt-get update && apt-get install -y \
+        python3-pip libasound2 libegl1-mesa libgl1-mesa-glx \
+        libxcomposite1 libxcursor1 libxi6 libxrandr2 libxss1 \
+        libxtst6 gdal-bin ffmpeg vlc dnsutils iputils-ping \
+        git remmina remmina-plugin-rdp
+
+# update pip and install python packages
+COPY resources/install_python_packages.sh /tmp/
+RUN bash /tmp/install_python_packages.sh
+
+# Install Anaconda3
+COPY resources/install_anaconda.sh /tmp/
+RUN bash /tmp/install_anaconda.sh
+
+# Install packages in conda environment
+USER 1000
+COPY resources/install_conda_packages.sh /tmp/
+RUN bash /tmp/install_conda_packages.sh
+USER root 
+
+# Install nvtop
+COPY resources/install_nvtop.sh /tmp/
+RUN bash /tmp/install_nvtop.sh
+
+# QGIS
+COPY resources/install_qgis.sh /tmp/
+RUN bash /tmp/install_qgis.sh
+
+# Install PyCharm
+RUN cd /opt/ \
+    && wget https://download.jetbrains.com/python/pycharm-community-2021.1.1.tar.gz \
+    && tar xvf pycharm-community-*.tar.gz \
+    && rm -rf pycharm-community-*.tar.gz \
+    && mv /opt/pycharm-community-2021.1.1 /opt/pycharm
+
+# Create desktop shortcuts
+COPY resources/spyder.desktop $HOME/Desktop/
+COPY resources/jupyter.desktop $HOME/Desktop/
+COPY resources/pycharm.desktop ${HOME}/Desktop/
+RUN cp /usr/share/applications/org.remmina.Remmina.desktop $HOME/Desktop/ \
+    && chmod +x $HOME/Desktop/org.remmina.Remmina.desktop \
+    && chown 1000:1000 $HOME/Desktop/org.remmina.Remmina.desktop
+
+
+###### ADD MATLAB ######
+# Copyright 2021-2023 The MathWorks, Inc.
+# Builds Docker image with 
+# 1. MATLAB - Using MPM
+# 2. MATLAB Integration for Jupyter (VNC)
+# on a base image of jupyter/base-notebook.
+
+## Sample Build Command:
+# docker build --build-arg MATLAB_RELEASE=r2023a \
+#              --build-arg MATLAB_PRODUCT_LIST="MATLAB Deep_Learning_Toolbox Symbolic_Math_Toolbox"\
+#              --build-arg LICENSE_SERVER=12345@hostname.com \
+#              -t my_matlab_image_name .
+
+# Specify release of MATLAB to build. (use lowercase, default is r2023a)
+ARG MATLAB_RELEASE=r2023a
+
+# Specify the list of products to install into MATLAB, 
+ARG MATLAB_PRODUCT_LIST="MATLAB Parallel_Computing_Toolbox Image_Processing_Toolbox Signal_Processing_Toolbox Image_Processing_Toolbox Optimization_Toolbox Statistics_and_Machine_Learning_Toolbox 	Wavelet_Toolbox"
+
+# ARG MATLAB_PRODUCT_LIST="MATLAB"
+
+# Optional Network License Server information
+ARG LICENSE_SERVER
+
+# If LICENSE_SERVER is provided then SHOULD_USE_LICENSE_SERVER will be set to "_use_lm"
+ARG SHOULD_USE_LICENSE_SERVER=${LICENSE_SERVER:+"_with_lm"}
+
+# Default DDUX information
+ARG MW_CONTEXT_TAGS=MATLAB_PROXY:JUPYTER:MPM:V1
+
+ARG LICENSE_SERVER
+
+# If license server information is available, then use it to set environment variable
+ENV MLM_LICENSE_FILE=${LICENSE_SERVER}
+
+# Select base Jupyter image based on whether LICENSE_SERVER is provided
+# FROM base_jupyter_image${SHOULD_USE_LICENSE_SERVER}
+ARG MW_CONTEXT_TAGS
+ARG MATLAB_RELEASE
+ARG MATLAB_PRODUCT_LIST
+
+# Switch to root user
+USER root
+
+ENV DEBIAN_FRONTEND="noninteractive" TZ="Etc/UTC"
+
+## Installing Dependencies for Ubuntu 20.04
+# For MATLAB : Get base-dependencies.txt from matlab-deps repository on GitHub
+# For mpm : wget, unzip, ca-certificates
+# For MATLAB Integration for Jupyter (VNC): xvfb dbus-x11 firefox xfce4 xfce4-panel xfce4-session xfce4-settings xorg xubuntu-icon-theme curl xscreensaver
+
+# List of MATLAB Dependencies for Ubuntu 20.04 and specified MATLAB_RELEASE
+ARG MATLAB_DEPS_REQUIREMENTS_FILE="https://raw.githubusercontent.com/mathworks-ref-arch/container-images/main/matlab-deps/${MATLAB_RELEASE}/ubuntu20.04/base-dependencies.txt"
+ARG MATLAB_DEPS_REQUIREMENTS_FILE_NAME="matlab-deps-${MATLAB_RELEASE}-base-dependencies.txt"
+
+# Install dependencies
+RUN wget ${MATLAB_DEPS_REQUIREMENTS_FILE} -O ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} && \
+    export DEBIAN_FRONTEND=noninteractive && apt-get update && \
+    xargs -a ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} -r apt-get install --no-install-recommends -y \
+    dbus-x11 \
+    firefox \
+    xfce4 \
+    xfce4-panel \
+    xfce4-session \
+    xfce4-settings \
+    xorg \
+    xubuntu-icon-theme \
+    curl \
+    xscreensaver \
+    && apt-get remove -y gnome-screensaver  \
+    && apt-get clean \
+    && apt-get -y autoremove \
+    && rm -rf /var/lib/apt/lists/* ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME}
+
+# Run mpm to install MATLAB in the target location and delete the mpm installation afterwards
+RUN wget -q https://www.mathworks.com/mpm/glnxa64/mpm && \ 
+    chmod +x mpm && \
+    ./mpm install \
+    --release=${MATLAB_RELEASE} \
+    --destination=/opt/matlab \
+    --products ${MATLAB_PRODUCT_LIST} && \
+    rm -f mpm /tmp/mathworks_root.log && \
+    ln -s /opt/matlab/bin/matlab /usr/local/bin/matlab
+
+# Install patched glibc - See https://github.com/mathworks/build-glibc-bz-19329-patch
+WORKDIR /packages
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && apt-get clean && apt-get autoremove && \
+    wget -q https://github.com/mathworks/build-glibc-bz-19329-patch/releases/download/ubuntu-focal/all-packages.tar.gz && \
+    tar -x -f all-packages.tar.gz \
+    --exclude glibc-*.deb \
+    --exclude libc6-dbg*.deb && \
+    apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
+    rm -fr /packages
+
+WORKDIR $HOME
+
+#RStudio
+RUN apt-get update && apt-get -y install \
+        software-properties-common \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
+    && apt-get update && apt-get install -y \
+        gdebi-core \
+        r-base \
+    && cd /tmp && wget https://download1.rstudio.org/electron/focal/amd64/rstudio-2023.06.1-524-amd64.deb \
+    && gdebi --n rstudio-*-amd64.deb \
+    && rm -f rstudio-*-amd64.deb \
+    && sudo sed -i 's|Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|' /usr/share/applications/rstudio.desktop \
+    && cp /usr/share/applications/rstudio.desktop $HOME/Desktop/ \
+    && chmod +x $HOME/Desktop/*.desktop
+
+
+# Create the .desktop file
+RUN echo '[Desktop Entry]\
+\nVersion=1.0\
+\nType=Application\
+\nName=MATLAB R2023a\
+\nComment=MATLAB R2023a software\
+\nExec=/usr/local/bin/matlab -desktop\
+\nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
+\nTerminal=false\
+\nCategories=Development;Simulation;Education;Science;\
+\nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && chmod +x $HOME/Desktop/*.desktop
+
+
+
+######### END CUSTOMIZATIONS ########
+
+
 # Userspace Runtime
-ENV HOME /home/kasm-user
+ENV HOME /home/$NB_USER
+
+RUN chown -R 1000:0 $HOME
+
 WORKDIR $HOME
 USER 1000
 
