@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   sf-dev01:
-    image: cincibrainlab/signalflow-development:jammy
+    image: cincibrainlab/signalflow-development:focal
     container_name: sf-dev01
     environment:
       - VNC_PW=password
