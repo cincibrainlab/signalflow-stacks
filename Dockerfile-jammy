@@ -186,21 +186,6 @@ RUN wget -q https://www.mathworks.com/mpm/glnxa64/mpm && \
 #     apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
 #     rm -fr /packages
 
-# #RStudio
-RUN apt-get update && apt-get -y install \
-        software-properties-common \
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/' \
-    && apt-get update && apt-get install -y \
-        gdebi-core \
-        r-base \
-    && cd /tmp && wget https://download1.rstudio.org/electron/jammy/amd64/rstudio-2023.06.1-524-amd64.deb \
-    && gdebi --n rstudio-*-amd64.deb \
-    && rm -f rstudio-*-amd64.deb \
-    && sudo sed -i 's|Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|' /usr/share/applications/rstudio.desktop \
-    && cp /usr/share/applications/rstudio.desktop $HOME/Desktop/ \
-    && chmod +x $HOME/Desktop/*.desktop
-
 # Create the .desktop file
 RUN echo '[Desktop Entry]\
 \nVersion=1.0\
@@ -260,6 +245,10 @@ RUN $CONDA_DIR/envs/mne/bin/python -m pip install s3fs bokeh nibabel joblib h5py
         ipywidgets ipyvtklink vtk pyvista pyvistaqt PyQt5 matplotlib && \
     $CONDA_DIR/envs/mne/bin/python -m pip install https://github.com/mne-tools/mne-python/archive/${mne_v}.zip
 
+RUN micromamba install --yes -n base \
+    -c conda-forge \
+    nb_conda_kernels
+
 RUN micromamba install --yes -n mne \
     -c conda-forge \
     python==3.9 \
@@ -280,15 +269,67 @@ RUN micromamba install --yes -n mne \
 # Install Node.js and npm using the package manager
 RUN apt-get update && \
     apt-get install -y curl && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs
 
 # Python Modifications
 RUN $CONDA_DIR/envs/mne/bin/python -m pip install ipympl npm jupyterlab-quarto
-# RUN jupyter lab build --minimize=False
+RUN $CONDA_DIR/envs/mne/bin/jupyter lab build --minimize=False
 
 RUN ln -s ${MAMBA_EXE} /usr/local/conda && \
     ln -s  ${MAMBA_EXE}/usr/local/mamba
+
+##### Add R
+# Set the R_LIBS_SITE environment variable
+ENV R_LIBS_SITE=/usr/local/lib/R/site-library 
+RUN  mkdir -p ${R_LIBS_SITE} && chmod 777 ${R_LIBS_SITE}
+
+# #RStudio
+RUN apt-get update && apt-get -y install \
+        software-properties-common \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/' \
+    && apt-get update && apt-get install -y \
+        gdebi-core \
+        r-base \
+    && cd /tmp && wget https://download1.rstudio.org/electron/jammy/amd64/rstudio-2023.06.1-524-amd64.deb \
+    && gdebi --n rstudio-*-amd64.deb \
+    && rm -f rstudio-*-amd64.deb \
+    && sudo sed -i 's|Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|' /usr/share/applications/rstudio.desktop \
+    && cp /usr/share/applications/rstudio.desktop $HOME/Desktop/ \
+    && chmod +x $HOME/Desktop/*.desktop
+
+
+RUN apt-get install -y  --no-install-recommends\
+    libxml2-dev \
+    libcairo2-dev \
+    libgit2-dev \
+    default-libmysqlclient-dev \
+    libpq-dev \
+    libsasl2-dev \
+    libsqlite3-dev \
+    libssh2-1-dev \
+    libxtst6 \
+    libcurl4-openssl-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    unixodbc-dev
+
+# Install tidyverse in R
+RUN R -e "install.packages('tidyverse', repos='http://cran.rstudio.com/', Ncpus=10)"
+
+# Modify Jupyter Lab
+ENV JUPYTER_DATA_DIR=/srv
+RUN sed -i "s|--ip=127.0.0.1|--ip=0.0.0.0 --notebook-dir=$JUPYTER_DATA_DIR|;" ${HOME}/Desktop/jupyter.desktop && \
+  chmod -R 777 ${HOME}/Desktop
+EXPOSE 8888
+
+# Install various kernals
+RUN python3 -m pip install jupyter-matlab-proxy jupyterlab_github jupyter_ai
 
 ######### END CUSTOMIZATIONS ########
 

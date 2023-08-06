@@ -193,21 +193,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
     rm -fr /packages
 
-#RStudio
-RUN apt-get update && apt-get -y install \
-        software-properties-common \
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
-    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
-    && apt-get update && apt-get install -y \
-        gdebi-core \
-        r-base \
-    && cd /tmp && wget https://download1.rstudio.org/electron/focal/amd64/rstudio-2023.06.1-524-amd64.deb \
-    && gdebi --n rstudio-*-amd64.deb \
-    && rm -f rstudio-*-amd64.deb \
-    && sudo sed -i 's|Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|' /usr/share/applications/rstudio.desktop \
-    && cp /usr/share/applications/rstudio.desktop $HOME/Desktop/ \
-    && chmod +x $HOME/Desktop/*.desktop
-
 # Create the .desktop file
 RUN echo '[Desktop Entry]\
 \nVersion=1.0\
@@ -263,9 +248,46 @@ RUN test "$TARGETARCH" = 'amd64' && export ARCH='64'; \
 RUN micromamba shell init --shell bash --root-prefix=${CONDA_DIR} && \
   micromamba create --name mne python=3.9 -c conda-forge
 
+# +------------------+----------------------------------------------+
+# | Package          | Description                                  |
+# +------------------+----------------------------------------------+
+# | s3fs             | Amazon S3 filesystems                        |
+# | bokeh            | Interactive visualizations for web browsers  |
+# | nibabel          | Neuroimaging data formats                    |
+# | joblib           | Lightweight pipelining and parallelism       |
+# | h5py             | Reading and writing HDF5 files               |
+# | pooch            | Downloading and managing data files          |
+# | jupyterlab       | Web-based interactive development            |
+# | ipywidgets       | Interactive HTML widgets for Jupyter         |
+# | ipyvtklink       | Bi-directional communication with VTK        |
+# | vtk              | 3D computer graphics and visualization       |
+# | pyvista          | 3D plotting and mesh analysis with VTK       |
+# | pyvistaqt        | Integrating PyVista with PyQt5               |
+# | PyQt5            | Desktop applications with Qt5                |
+# | matplotlib       | Static, animated, and interactive visuals    |
+# | nb_conda_kernels | Conda environment-based kernels              |
+# | python           | Python programming language                  |
+# | python-blosc     | Blosc compression library wrapper            |
+# | cytoolz          | Fast, memory-efficient functional tools      |
+# | dask             | Parallel and distributed computing           |
+# | lz4              | LZ4 compression and decompression            |
+# | nomkl            | Disable MKL in NumPy and other packages      |
+# | numpy            | Numerical computing                          |
+# | pandas           | Data manipulation and analysis               |
+# | tini             | Minimal init system for containers           |
+# | jupyter-matlab-proxy | JupyterLab extension for MATLAB          |
+# | jupyter_ai       | JupyterLab extension for AI development      |
+# | openai           | OpenAI API client library                    |
+# | jupyterlab_github| JupyterLab extension for GitHub integration  |
+# +------------------+----------------------------------------------+
+
 RUN $CONDA_DIR/envs/mne/bin/python -m pip install s3fs bokeh nibabel joblib h5py pooch jupyterlab \
         ipywidgets ipyvtklink vtk pyvista pyvistaqt PyQt5 matplotlib && \
     $CONDA_DIR/envs/mne/bin/python -m pip install https://github.com/mne-tools/mne-python/archive/${mne_v}.zip
+
+RUN micromamba install --yes -n base \
+    -c conda-forge \
+    nb_conda_kernels
 
 RUN micromamba install --yes -n mne \
     -c conda-forge \
@@ -287,25 +309,158 @@ RUN micromamba install --yes -n mne \
 # Install Node.js and npm using the package manager
 RUN apt-get update && \
     apt-get install -y curl && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs
 
 # Python Modifications
 RUN $CONDA_DIR/envs/mne/bin/python -m pip install ipympl npm jupyterlab-quarto
-#RUN bash -c 'jupyter lab build --minimize=False'
+RUN $CONDA_DIR/envs/mne/bin/jupyter lab build --minimize=False
 
 RUN ln -s ${MAMBA_EXE} /usr/local/conda && \
     ln -s  ${MAMBA_EXE}/usr/local/mamba
 
-
-#&& \
-#     conda activate "${ENV_NAME}" 2>/dev/null \
-#     || mamba activate "${ENV_NAME}" 2>/dev/null \
-#     || micromamba activate "${ENV_NAME}"
-
 # SHELL ["/bin/bash", "--login", "-c"]
 
-# RUN micromamba create --name mne
+
+# R Packages
+# +--------------+----------------------------------------------+
+# | Package      | Description                                  |
+# +--------------+----------------------------------------------+
+# | tidyverse    | Collection of R packages for data science    |
+# | pandoc       | Document converter                           |
+# | pandoc-citeproc | Citation processing for Pandoc            |
+# | Quarto       | Next generation of R Markdown                |
+# | pacman       | Package management and utility functions     |
+# | shiny        | Web application framework for R              |
+# | jsonlite     | JSON parser and generator                    |
+# | ggplot2      | Data visualization                           |
+# | htmltools    | HTML manipulation and rendering              |
+# | remotes      | R package installation from remote repos     |
+# | renv         | Project environments with R                  |
+# | knitr        | Dynamic report generation with R             |
+# | rmarkdown    | Dynamic documents with R                     |
+# | quarto       | Next generation of R Markdown                |
+# | argparser    | Command line argument parser                 |
+# | this.path    | File path manipulation                       |
+# | here         | File path manipulation                       |
+# | languageserver | Language server protocol for R             |
+# | officer      | Manipulation of Microsoft Word and PPTX docs |
+# | flextable    | Create and format tables                     |
+# | nlme         | Linear and nonlinear mixed effects models    |
+# | emmeans      | Estimated marginal means                     |
+# | ggthemes     | Extra themes for ggplot2                     |
+# | broom.mixed  | Tidying methods for mixed models             |
+# | ggsignif     | Significance brackets for ggplot2            |
+# +--------------+----------------------------------------------+
+
+#RStudio
+# Set the R_LIBS_SITE environment variable
+ENV R_LIBS_SITE=/usr/local/lib/R/site-library 
+RUN  mkdir -p ${R_LIBS_SITE} && chmod 777 ${R_LIBS_SITE}
+
+RUN apt-get update && apt-get -y install \
+        software-properties-common \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
+    && apt-get update && apt-get install -y \
+        gdebi-core \
+        r-base \
+    && cd /tmp && wget https://download1.rstudio.org/electron/focal/amd64/rstudio-2023.06.1-524-amd64.deb \
+    && gdebi --n rstudio-*-amd64.deb \
+    && rm -f rstudio-*-amd64.deb \
+    && sudo sed -i 's|Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox %F|' /usr/share/applications/rstudio.desktop \
+    && cp /usr/share/applications/rstudio.desktop $HOME/Desktop/ \
+    && chmod +x $HOME/Desktop/*.desktop
+
+
+RUN apt-get install -y  --no-install-recommends\
+    libxml2-dev \
+    libcairo2-dev \
+    libgit2-dev \
+    default-libmysqlclient-dev \
+    libpq-dev \
+    libsasl2-dev \
+    libsqlite3-dev \
+    libssh2-1-dev \
+    libxtst6 \
+    libcurl4-openssl-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    unixodbc-dev
+
+# Install tidyverse in R
+RUN R -e "install.packages('tidyverse', repos='http://cran.rstudio.com/', Ncpus=10)"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pandoc \
+    pandoc-citeproc 
+
+# Install Quarto
+ARG QUARTO_VERSION="1.4.294"
+RUN curl -o quarto-linux-amd64.deb -L https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb
+RUN gdebi --non-interactive quarto-linux-amd64.deb && quarto install tool tinytex
+
+RUN R -e "install.packages('pacman', repos='http://cran.rstudio.com/', Ncpus=10)"
+
+RUN R -e "pacman::p_load(\
+    tidyverse,\
+    shiny, \
+    jsonlite, \
+    ggplot2, \
+    htmltools, \
+    remotes, \
+    renv, \
+    knitr, \
+    rmarkdown, \
+    quarto, \
+    argparser, \
+    this.path, \
+    here, \
+    languageserver, \
+    officer, \
+    flextable, \ 
+    nlme, \
+    emmeans, \
+    ggthemes, \
+    broom.mixed, \
+    ggsignif)"
+
+# Additional Jupyter modifications
+# Create the plugin.jupyterlab-settings file with the required content
+RUN mkdir -p ${HOME}/.jupyter/lab/user-settings/@jupyterlab/extensionmanager-extension && \
+  echo '{\n\
+    // Extension Manager\n\
+    // @jupyterlab/extensionmanager-extension:plugin\n\
+    // Extension manager settings.\n\
+    // *********************************************\n\
+    // Disclaimed Status\n\
+    // Whether the user understand that extensions managed through this interface run arbitrary code that may be dangerous\n\
+    "disclaimed": true\n\
+}' > ${HOME}/.jupyter/lab/user-settings/@jupyterlab/extensionmanager-extension/plugin.jupyterlab-settings
+
+# Modify Jupyter Lab
+ENV JUPYTER_DATA_DIR=/srv
+
+RUN sed -i "s|--ip=127.0.0.1|--ip=0.0.0.0 --notebook-dir=$JUPYTER_DATA_DIR|;" ${HOME}/Desktop/jupyter.desktop && \
+  chmod -R 777 ${HOME}/Desktop
+EXPOSE 8888
+
+# Install various kernals
+RUN python3 -m pip install jupyter-matlab-proxy jupyterlab_github jupyter_ai  --ignore-installed PyYAML
+
+RUN   R --quiet -e 'install.packages("devtools")' &&\
+      R --quiet -e 'remotes::install_github("IRkernel/IRkernel@*release")' && \
+      sudo R --quiet -e 'IRkernel::installspec(user = FALSE)' && \
+      python3 -m pip install --no-cache-dir jupyter-rsession-proxy
+
+# Install Quarto
+ARG QUARTO_VERSION="1.4.294"
+RUN curl -o quarto-linux-amd64.deb -L https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb
+RUN gdebi --non-interactive quarto-linux-amd64.deb && quarto install tool tinytex
 
 ######### END CUSTOMIZATIONS ########
 
