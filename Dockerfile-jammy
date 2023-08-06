@@ -186,8 +186,6 @@ RUN wget -q https://www.mathworks.com/mpm/glnxa64/mpm && \
 #     apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
 #     rm -fr /packages
 
-# WORKDIR $HOME
-
 # #RStudio
 RUN apt-get update && apt-get -y install \
         software-properties-common \
@@ -215,18 +213,95 @@ RUN echo '[Desktop Entry]\
 \nCategories=Development;Simulation;Education;Science;\
 \nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && chmod +x $HOME/Desktop/*.desktop
 
+ARG CONDA_DIR="/opt/anaconda3"
 
+# install xvfb
+RUN apt-get update && \
+    apt-get install -y wget xvfb  qtbase5-dev qt5-qmake && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# ######### END CUSTOMIZATIONS ########
+# setup entry point
+COPY prepare.sh /usr/bin/prepare.sh
+RUN chmod a+x /usr/bin/prepare.sh
 
+RUN chmod 777 /opt
+
+# RUN /opt/anaconda3/bin/conda init
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bzip2 \
+        ca-certificates \
+        curl \
+        strace
+ARG VERSION=1.4.9
+ARG TARGETARCH=amd64
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV ENV_NAME="base"
+ENV MAMBA_ROOT_PREFIX=$CONDA_DIR
+ENV MAMBA_EXE="/usr/local/bin/micromamba"
+ARG mne_v=v0.23.0
+ENV \
+    MNE_3D_BACKEND=pyvista \
+    MNE_3D_OPTION_ANTIALIAS=false\
+    START_XVFB=true
+
+# Initialize Micromamba for the current shell
+RUN test "$TARGETARCH" = 'amd64' && export ARCH='64'; \
+    test "$TARGETARCH" = 'arm64' && export ARCH='aarch64'; \
+    test "$TARGETARCH" = 'ppc64le' && export ARCH='ppc64le'; \
+    curl -L "https://micromamba.snakepit.net/api/micromamba/linux-${ARCH}/${VERSION}" | \
+    tar -xj -C "/tmp" "bin/micromamba" && \
+    mv "/tmp/bin/micromamba" "/usr/local/bin"
+
+RUN micromamba shell init --shell bash --root-prefix=${CONDA_DIR} && \
+  micromamba create --name mne python=3.9 -c conda-forge
+
+RUN $CONDA_DIR/envs/mne/bin/python -m pip install s3fs bokeh nibabel joblib h5py pooch jupyterlab \
+        ipywidgets ipyvtklink vtk pyvista pyvistaqt PyQt5 matplotlib && \
+    $CONDA_DIR/envs/mne/bin/python -m pip install https://github.com/mne-tools/mne-python/archive/${mne_v}.zip
+
+RUN micromamba install --yes -n mne \
+    -c conda-forge \
+    python==3.9 \
+    python-blosc \
+    cytoolz \
+    dask==2021.4.0 \
+    lz4 \
+    nomkl \
+    numpy==1.21.0 \
+    pandas==1.3.0 \
+    tini==0.18.0 \
+    && micromamba clean -tipy \
+    && find ${CONDA_DIR} -type f,l -name '*.a' -delete \
+    && find ${CONDA_DIR} -type f,l -name '*.pyc' -delete \
+    && find ${CONDA_DIR} -type f,l -name '*.js.map' -delete \
+    && rm -rf ${CONDA_DIR}pkgs
+
+# Install Node.js and npm using the package manager
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs
+
+# Python Modifications
+RUN $CONDA_DIR/envs/mne/bin/python -m pip install ipympl npm jupyterlab-quarto
+# RUN jupyter lab build --minimize=False
+
+RUN ln -s ${MAMBA_EXE} /usr/local/conda && \
+    ln -s  ${MAMBA_EXE}/usr/local/mamba
+
+######### END CUSTOMIZATIONS ########
 
 # Userspace Runtime
+RUN ln -s .bashrc .bash_profile
 ENV HOME /home/$NB_USER
-
+WORKDIR $HOME
 RUN chown -R 1000:0 $HOME
+
+USER root
+RUN echo 'root:welcome' | chpasswd
 
 WORKDIR $HOME
 USER 1000
 
 CMD ["--tail-log"]
-
