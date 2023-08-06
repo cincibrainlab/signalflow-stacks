@@ -20,6 +20,7 @@ services:
     volumes:
       - ${LOCAL_STORAGE}:/srv
       - ${CERTS_DIR}:/usr/local/share/ca-certificates/
+      - ${MATLAB_LICENSE_FILE}:/licenses/license.lic
     shm_size: 512m
     working_dir: /srv
     deploy:
