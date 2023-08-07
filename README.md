@@ -1,15 +1,34 @@
 # SignalFlow Development
 ## SignalFlow Docker Stacks
 
-This stack uses a newer base operating system (Debian 12) with a more advanced VNC platform (KASM). This container attempts to (but not yet successful) have successful interactive Jupyter notebook MNE plots.
+SignalFlow Docker Stacks are ready-to-run workstation Docker images contain the big "three" platforms for EEG analysis: MATLAB, Python, and R. When active the images allow browser access to either a full desktop experience or web-based notebooks. All applications can access the same underlying file volumes.
+
+Images were built from core KASM workstation images and adding layers for each application. Both *focal* and *jammy* versions have feature parity, but we envision the *jammy* version based on Ubuntu 22 will continue development.
+
 
 ![dev-launcher ](signalflow-dev-screenshot.png)
+
+Notes:
+
+* Add ` --gpus all` if [nvidia toolkit](https://github.com/NVIDIA/nvidia-docker) for docker is installed.
+* v1 is deprecated based on an outdated framework
+* tested on Windows and Linux AMD64 hosts; not yet built for ARM hosting
+* source code including docker build files are available on Github
 
 
 ## Quick Start
 Example:
+* :focal (based on Ubuntu 20.04)
+
+``` 
+docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \
+       -e  VNC_PW=password -e START_XFCE4=1 cincibrainlab/signalflow-development:focal
 ```
-docker run -e JUPYTER_TOKEN="welcome" -p 3000:3000 cincibrainlab/signalflow-development
+* :jammy(based on Ubuntu 22.04)
+
+```
+docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \ 
+       -e VNC_PW=password -e START_XFCE4=1 cincibrainlab/signalflow-development:jammy
 ```
 
 DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-development/general
