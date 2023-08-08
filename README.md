@@ -5,7 +5,6 @@ SignalFlow Docker Stacks are ready-to-run workstation Docker images contain the 
 
 Images were built from core KASM workstation images and adding layers for each application. Both *focal* and *jammy* versions have feature parity, but we envision the *jammy* version based on Ubuntu 22 will continue development.
 
-
 ![dev-launcher ](signalflow-dev-screenshot.png)
 
 Notes:
@@ -14,6 +13,7 @@ Notes:
 * v1 is deprecated based on an outdated framework
 * tested on Windows and Linux AMD64 hosts; not yet built for ARM hosting
 * source code including docker build files are available on Github
+* Current size of image is unacceptable - using Dive to optimize image
 
 
 ## Quick Start
