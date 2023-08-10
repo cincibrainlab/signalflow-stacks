@@ -15,4 +15,4 @@ conda clean --all
 /opt/anaconda3/bin/conda config --set ssl_verify /etc/ssl/certs/ca-certificates.crt
 /opt/anaconda3/bin/conda install pip
 mkdir -p /home/kasm-user/.pip
-chown -R 1000:1000 /opt/anaconda3 /home/kasm-default-profile/.conda/
+chown -R 1000:1000 /opt/anaconda3 # /home/kasm-default-profile/.conda/

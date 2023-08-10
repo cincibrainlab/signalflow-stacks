@@ -339,7 +339,7 @@ RUN gdebi --non-interactive quarto-linux-amd64.deb && quarto install tool tinyte
 
 # MNE fixes
 
-RUN $CONDA_DIR/envs/mne/bin/python -m pip install ipyfilechooser ipydatagrid ipympl
+RUN $CONDA_DIR/envs/mne/bin/python -m pip install ipyfilechooser ipydatagrid ipympl jupyterlab-quarto
 
 ######### END CUSTOMIZATIONS ########
 
