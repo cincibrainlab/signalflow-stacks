@@ -1,0 +1,159 @@
+FROM kasmweb/core-ubuntu-focal:1.13.1
+USER root
+
+ENV HOME /home/kasm-default-profile
+ENV STARTUPDIR /dockerstartup
+ENV INST_SCRIPTS $STARTUPDIR/install
+WORKDIR $HOME
+
+######### Customize Container Here ###########
+ENV DEBIAN_FRONTEND="noninteractive" TZ="Etc/UTC"
+
+###### ADD MATLAB ######
+# Copyright 2021-2023 The MathWorks, Inc.
+# Builds Docker image with 
+# 1. MATLAB - Using MPM
+
+## Sample Build Command:
+# docker build --build-arg MATLAB_RELEASE=r2023a \
+#              --build-arg MATLAB_PRODUCT_LIST="MATLAB Deep_Learning_Toolbox Symbolic_Math_Toolbox"\
+#              --build-arg LICENSE_SERVER=12345@hostname.com \
+#              -t my_matlab_image_name .
+
+# Specify release of MATLAB to build. (use lowercase, default is r2023a)
+ARG MATLAB_RELEASE=r2023a
+
+# Specify the list of products to install into MATLAB, 
+ARG MATLAB_PRODUCT_LIST="MATLAB Parallel_Computing_Toolbox Image_Processing_Toolbox Signal_Processing_Toolbox Curve_Fitting_Toolbox Image_Processing_Toolbox Optimization_Toolbox Statistics_and_Machine_Learning_Toolbox Wavelet_Toolbox"
+
+# ARG MATLAB_PRODUCT_LIST="MATLAB"
+
+# Optional Network License Server information
+ARG LICENSE_SERVER
+
+# If LICENSE_SERVER is provided then SHOULD_USE_LICENSE_SERVER will be set to "_use_lm"
+ARG SHOULD_USE_LICENSE_SERVER=${LICENSE_SERVER:+"_with_lm"}
+
+# Default DDUX information
+ARG MW_CONTEXT_TAGS=MATLAB_PROXY:JUPYTER:MPM:V1
+
+ARG LICENSE_SERVER
+
+# If license server information is available, then use it to set environment variable
+ENV MLM_LICENSE_FILE=${LICENSE_SERVER}
+
+# Select base Jupyter image based on whether LICENSE_SERVER is provided
+# FROM base_jupyter_image${SHOULD_USE_LICENSE_SERVER}
+ARG MW_CONTEXT_TAGS
+ARG MATLAB_RELEASE
+ARG MATLAB_PRODUCT_LIST
+
+## Installing Dependencies for Ubuntu 20.04
+# For MATLAB : Get base-dependencies.txt from matlab-deps repository on GitHub
+# For mpm : wget, unzip, ca-certificates
+# For MATLAB Integration for Jupyter (VNC): xvfb dbus-x11 firefox xfce4 xfce4-panel xfce4-session xfce4-settings xorg xubuntu-icon-theme curl xscreensaver
+
+# List of MATLAB Dependencies for Ubuntu 20.04 and specified MATLAB_RELEASE
+ARG MATLAB_DEPS_REQUIREMENTS_FILE="https://raw.githubusercontent.com/mathworks-ref-arch/container-images/main/matlab-deps/${MATLAB_RELEASE}/ubuntu20.04/base-dependencies.txt"
+ARG MATLAB_DEPS_REQUIREMENTS_FILE_NAME="matlab-deps-${MATLAB_RELEASE}-base-dependencies.txt"
+
+# Install dependencies
+RUN wget ${MATLAB_DEPS_REQUIREMENTS_FILE} -O ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} && \
+    export DEBIAN_FRONTEND=noninteractive && apt-get update && \
+    xargs -a ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} -r apt-get install --no-install-recommends -y \
+    && apt-get remove -y gnome-screensaver  \
+    && apt-get clean \
+    && apt-get -y autoremove \
+    && rm -rf /var/lib/apt/lists/* ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} \
+    && wget -q https://www.mathworks.com/mpm/glnxa64/mpm && \ 
+    chmod +x mpm && \
+    ./mpm install \
+    --release=${MATLAB_RELEASE} \
+    --destination=/opt/matlab \
+    --products ${MATLAB_PRODUCT_LIST} && \
+    rm -f mpm /tmp/mathworks_root.log && \
+    ln -s /opt/matlab/bin/matlab /usr/local/bin/matlab && \
+    chown -R 1000:0 /opt/matlab
+
+
+# Install patched glibc - See https://github.com/mathworks/build-glibc-bz-19329-patch
+WORKDIR /packages
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && apt-get clean && apt-get autoremove && \
+    wget -q https://github.com/mathworks/build-glibc-bz-19329-patch/releases/download/ubuntu-focal/all-packages.tar.gz && \
+    tar -x -f all-packages.tar.gz \
+    --exclude glibc-*.deb \
+    --exclude libc6-dbg*.deb && \
+    apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
+    rm -fr /packages
+
+# Create the .desktop file
+RUN echo '[Desktop Entry]\
+\nVersion=1.0\
+\nType=Application\
+\nName=MATLAB R2023a\
+\nComment=MATLAB R2023a software\
+\nExec=/usr/local/bin/matlab -desktop\
+\nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
+\nTerminal=false\
+\nCategories=Development;Simulation;Education;Science;\
+\nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && \
+chmod +x $HOME/Desktop/matlab.desktop && \
+chown 1000:0 $HOME/Desktop/matlab.desktop
+
+ENV MLM_LICENSE_FILE=/licenses/license.lic
+
+# RUN cd /tmp \
+#     && wget -q https://www.mathworks.com/mpm/glnxa64/mpm \
+#     && chmod +x mpm \
+#     && ./mpm install --release=r2023a --destination=/opt/matlab --products Curve_Fitting_Toolbox \
+#     && rm mpm
+
+RUN bash -c 'printf "kasm-user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/kasm-user'
+
+### Envrionment config
+ENV DEBIAN_FRONTEND=noninteractive \
+    SKIP_CLEAN=true \
+    KASM_RX_HOME=$STARTUPDIR/kasmrx \
+    DONT_PROMPT_WSL_INSTALL="No_Prompt_please" \
+    INST_DIR=$STARTUPDIR/install \
+    INST_SCRIPTS="/ubuntu/install/tools/install_tools_deluxe.sh \
+                  /ubuntu/install/misc/install_tools.sh \
+                  /ubuntu/install/chrome/install_chrome.sh \
+                  /ubuntu/install/firefox/install_firefox.sh \
+                  /ubuntu/install/vs_code/install_vs_code.sh \
+                  /ubuntu/install/only_office/install_only_office.sh \
+                  /ubuntu/install/cleanup/cleanup.sh"
+
+# Copy install scripts
+COPY ./src/ $INST_DIR
+
+# Run installations
+RUN \
+  for SCRIPT in $INST_SCRIPTS; do \
+    bash ${INST_DIR}${SCRIPT}; \
+  done && \
+  $STARTUPDIR/set_user_permission.sh $HOME && \
+  rm -f /etc/X11/xinit/Xclients && \
+  chown 1000:0 $HOME && \
+  mkdir -p /home/kasm-user && \
+  chown -R 1000:0 /home/kasm-user && \
+  rm -Rf ${INST_DIR}
+
+# Install SignalFlowEEG and dependencies
+WORKDIR /TOOLBOXES
+COPY install_eeg_toolboxes.sh .
+RUN bash -c "./install_eeg_toolboxes"
+
+WORKDIR $HOME
+
+######### End Customizations ###########
+
+RUN chown 1000:0 $HOME
+RUN $STARTUPDIR/set_user_permission.sh $HOME
+
+ENV HOME /home/kasm-user
+WORKDIR $HOME
+RUN mkdir -p $HOME && chown -R 1000:0 $HOME
+
+USER 1000

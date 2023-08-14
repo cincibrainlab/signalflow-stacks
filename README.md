@@ -23,23 +23,11 @@ docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv
        -e VNC_PW=password -e START_XFCE4=1 cincibrainlab/signalflow-development:jammy
 ```
 
-DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-development/general
+DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-preprocessing/general
 
 
 ## Features
-Provides a full Linux desktop environment with Xfce, a scientific computing environment with Matlab and R, document authoring tools like Quarto, and developer tools - preconfigured for convenience on an academic research computing platform.
-
-- Base image: linuxserver/baseimage-kasmvnc:debianbookworm 
-- Installs packages: 
-  - Xfce desktop environment, Chromimum, Matlab, R, RStudio, Quarto, Pandoc, VSCode, GitHub Desktop, GitKraken
-- Configures Matlab R2023a with key toolboxes
-- Installs R 4.3 and key R packages like tidyverse, pacman, quarto
-- Configures locale, installs texlive for PDF rendering
-- Installs developer tools like VSCode, GitHub Desktop, GitKraken
-- Installs helpful packages like imagemagick, inkscape, zip/unzip
-- Configures `.desktop` files for no-sandbox mode for security
-- Creates `matlab` user with sudo permissions for convenience
-- Exposes port 3000 and sets up volume at `/config`
+Provides a full Linux desktop environment with Xfce, a scientific computing environment with Matlab preconfigured for EEG preprocessing.
 
 *Matlab Toolboxes installed suitable for HAPPE, MADE pipelines*
 - Parallel Computing Toolbox
@@ -49,6 +37,47 @@ Provides a full Linux desktop environment with Xfce, a scientific computing envi
 - Optimization Toolbox
 - Statistics and Machine Learning Toolbox
 - Wavelet Toolbox
+- Curve Fitting Toolbox
+
+* local use is added to the SUDO group. If container is modified, you can persist changes by using `docker commit` and using the saved image on subsequent `docker run` or `docker-compose` commands.
+
+## Repository Files
+
+* build-sfpreprocessing_*.sh: build command to create local container images for cpu and gpu versions
+* Dockerfile-signalflow-preprocessing-cpu: Source for CPU image
+* Dockerfile-signalflow-preprocessing-gpu: Source for GPU image
+* install_eeg_toolkits.sh: shell script for installing EEG toolkits
+* env.template: environmental variable template (rename to .env for production)
+* src/: KASM provided additional software setup scripts
+
+# Build instructions
+
+1. Clone repository by selecting the signalflow-preprocessing branch
+
+```bash
+git clone -b signalflow-preprocessing https://github.com/cincibrainlab/signalflow-stacks.git
+```
+
+2. enter the build directory
+
+```bash
+cd build
+```
+
+3. Modify either the Docker-signalflow-preprocessing-* Dockerfiles directory or modify the post-processing installs cript install_eeg_toolkits.sh. 
+
+4. Run a docker build command (can modify tags)
+
+```bash
+# build signalflow-preprocessing:cpu 
+docker build -t cincibrainlab/signalflow-preprocessing:cpu -f Dockerfile-signalflow-preprocessing-cpu
+
+# build signalflow-preprocessing:cpu 
+docker build -t cincibrainlab/signalflow-preprocessing:gpu-f Dockerfile-signalflow-preprocessing-gpu
+```
+
+5. Check image by either using `docker-compose` or `docker run` command (see above)
+
 
 ## License
 
