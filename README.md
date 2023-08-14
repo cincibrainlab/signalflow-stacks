@@ -1,30 +1,22 @@
-# SignalFlow Development
+# SignalFlow-Preprocessing
 ## SignalFlow Docker Stacks
 
-SignalFlow Docker Stacks are ready-to-run workstation Docker images contain the big "three" platforms for EEG analysis: MATLAB, Python, and R. When active the images allow browser access to either a full desktop experience or web-based notebooks. All applications can access the same underlying file volumes.
+*SignalFlow-Preprocessing* is a ready-to-run workstation in your browser for Matlab-based EEG preprocessing pipelines. 
 
-Images were built from core KASM workstation images and adding layers for each application. Both *focal* and *jammy* versions have feature parity, but we envision the *jammy* version based on Ubuntu 22 will continue development.
+The Docker container contains key software: Matlab 2023a and open-source toolkits (i.e., EEGLAB). The container uses your own data directories and MATLAB license. Changes to the linked data directories stay persistent even after stopping the container. The container can be deployed on any number of workstations and the image is standardized to be fully functional.
 
-![dev-launcher ](signalflow-dev-screenshot.png)
-
-Notes:
-
-* Add ` --gpus all` if [nvidia toolkit](https://github.com/NVIDIA/nvidia-docker) for docker is installed.
-* v1 is deprecated based on an outdated framework
-* tested on Windows and Linux AMD64 hosts; not yet built for ARM hosting
-* source code including docker build files are available on Github
-* Current size of image is unacceptable - using Dive to optimize image
+The current images are built using advanced VNC software (Kasm workstation) and should be comparable to working on a local desktop PC. We have made two containers available based on Ubuntu 20.04 LTS - a CPU-only container and a larger CUDA GPU-enabled container. 
 
 
 ## Quick Start
 Example:
-* :focal (based on Ubuntu 20.04)
+* :cpu (CPU only)
 
 ``` 
 docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \
        -e  VNC_PW=password -e START_XFCE4=1 cincibrainlab/signalflow-development:focal
 ```
-* :jammy(based on Ubuntu 22.04)
+* :gpu (Nvidia CUDA GPU support)
 
 ```
 docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \ 
