@@ -14,13 +14,13 @@ Example:
 
 ``` 
 docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \
-       -e  VNC_PW=password -e START_XFCE4=1 cincibrainlab/signalflow-development:focal
+       -e   cincibrainlab/signalflow-preprocessing:cpu
 ```
 * :gpu (Nvidia CUDA GPU support)
 
 ```
-docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \ 
-       -e VNC_PW=password -e START_XFCE4=1 cincibrainlab/signalflow-development:jammy
+docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv --gpus:all \ 
+       -e MLM_LICENSE cincibrainlab/signalflow-preprocessing:gpu
 ```
 
 DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-preprocessing/general
@@ -70,10 +70,10 @@ cd build
 
 ```bash
 # build signalflow-preprocessing:cpu 
-docker build -t cincibrainlab/signalflow-preprocessing:cpu -f Dockerfile-signalflow-preprocessing-cpu
+docker build -t cincibrainlab/signalflow-preprocessing:cpu -f Dockerfile-signalflow-preprocessing-cpu .
 
 # build signalflow-preprocessing:cpu 
-docker build -t cincibrainlab/signalflow-preprocessing:gpu-f Dockerfile-signalflow-preprocessing-gpu
+docker build -t cincibrainlab/signalflow-preprocessing:gpu-f Dockerfile-signalflow-preprocessing-gpu .
 ```
 
 5. Check image by either using `docker-compose` or `docker run` command (see above)
