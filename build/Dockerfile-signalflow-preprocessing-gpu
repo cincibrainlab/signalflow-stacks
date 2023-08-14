@@ -144,8 +144,9 @@ RUN \
 # Install SignalFlowEEG and dependencies
 WORKDIR /TOOLBOXES
 COPY ./install_eeg_toolboxes.sh .
-RUN bash -c "./install_eeg_toolboxes"
-
+RUN chmod +x ./install_eeg_toolboxes.sh && \
+  ./install_eeg_toolboxes.sh && \
+  chown -R 1000:0 /TOOLBOXES
 WORKDIR $HOME
 
 ######### End Customizations ###########
