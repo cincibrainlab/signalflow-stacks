@@ -70,10 +70,10 @@ cd build
 
 ```bash
 # build signalflow-preprocessing:cpu 
-docker build -t cincibrainlab/signalflow-preprocessing:cpu -f Dockerfile-signalflow-preprocessing-cpu
+docker build -t cincibrainlab/signalflow-preprocessing:cpu -f Dockerfile-signalflow-preprocessing-cpu .
 
 # build signalflow-preprocessing:cpu 
-docker build -t cincibrainlab/signalflow-preprocessing:gpu-f Dockerfile-signalflow-preprocessing-gpu
+docker build -t cincibrainlab/signalflow-preprocessing:gpu-f Dockerfile-signalflow-preprocessing-gpu .
 ```
 
 5. Check image by either using `docker-compose` or `docker run` command (see above)
