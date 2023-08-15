@@ -172,9 +172,6 @@ RUN echo '[Desktop Entry]\
 chmod +x $HOME/Desktop/matlab_student.desktop && \
 chown 1000:0 $HOME/Desktop/matlab_student.desktop
 
-# RUN bash -c 'printf "ubuntu ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/ubuntu'
-
-
 ######### End Customizations ###########
 
 RUN chown 1000:0 $HOME

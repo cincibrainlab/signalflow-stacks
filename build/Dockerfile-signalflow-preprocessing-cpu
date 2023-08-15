@@ -170,7 +170,6 @@ RUN echo '[Desktop Entry]\
 chmod +x $HOME/Desktop/matlab_student.desktop && \
 chown 1000:0 $HOME/Desktop/matlab_student.desktop
 
-
 ######### End Customizations ###########
 
 RUN chown 1000:0 $HOME
