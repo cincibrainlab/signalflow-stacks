@@ -1,12 +1,16 @@
 version: '3.8'
 services:
   signalflow-preprocessing:
-    image: cincibrainlab/signalflow-preprocessing:cpu
+    #image: cincibrainlab/signalflow-preprocessing:cpu
+    image: cincibrainlab/signalflow-preprocessing:gpu
     container_name: signalflow-preprocessing-01
     environment:
       - VNC_PW=password
       - MLM_LICENSE_FILE=/licenses/license.lic
+      - MW_CUDA_FORWARD_COMPATIBILITY=1
+      - CUDA_VISIBLE_DEVICES=GPU-f7d42825-5d5a-f356-291f-898ed4f5efef
       - HOST=${HOSTNAME}
+      - STUDENT_USER=${STUDENT_USER}
     hostname: ${HOSTNAME}
     mac_address: ${MAC_ADDRESS}
     ports:
@@ -16,14 +20,10 @@ services:
       - ${MATLAB_LICENSE_FILE}:/licenses/license.lic
     shm_size: 512m
     working_dir: /srv
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
-    #command: >
-    #  bash -c '
-    #  sudo update-ca-certificates &&
-    #  --tail-log'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

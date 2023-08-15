@@ -97,6 +97,7 @@ RUN echo '[Desktop Entry]\
 \nExec=/usr/local/bin/matlab -desktop\
 \nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
 \nTerminal=false\
+\nPath=/srv\
 \nCategories=Development;Simulation;Education;Science;\
 \nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && \
 chmod +x $HOME/Desktop/matlab.desktop && \
@@ -148,6 +149,27 @@ RUN chmod +x ./install_eeg_toolboxes.sh && \
   ./install_eeg_toolboxes.sh && \
   chown -R 1000:0 /TOOLBOXES
 WORKDIR $HOME
+
+# Use Student Username if ENV variable STUDENT_USER exists
+COPY start_student_matlab.sh /usr/local/bin/start_student_matlab.sh
+RUN chmod +x /usr/local/bin/start_student_matlab.sh
+
+# Create student icon
+# Create the .desktop file
+RUN echo '[Desktop Entry]\
+\nVersion=1.0\
+\nType=Application\
+\nName=MATLAB R2023a (Student)\
+\nComment=MATLAB R2023a software\
+\nExec=/usr/local/bin/start_student_matlab.sh\
+\nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
+\nTerminal=true\
+\nPath=/srv\
+\nCategories=Development;Simulation;Education;Science;\
+\nStartupNotify=true' >  $HOME/Desktop/matlab_student.desktop && \
+chmod +x $HOME/Desktop/matlab_student.desktop && \
+chown 1000:0 $HOME/Desktop/matlab_student.desktop
+
 
 ######### End Customizations ###########
 
