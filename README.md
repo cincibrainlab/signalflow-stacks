@@ -22,17 +22,9 @@ Container images are hosted on [CinciBrainLab DockerHub Repository](https://hub.
 
 `cincibrainlab/signaflow-mne`
 
-### Signalflow-Development
+### Signalflow-Preprocessing
 
-`cincibrainlab/signalflow-development`
-
-### Signalflow-SecurityMod
-
-`cincibrainlab/signalflow-securitymod` can be built to add various sensitive institution or personal information. This may include ssl-certs, API keys, login information, or scripts or code that otherwise would not be permamently contained within the main images. Source for these images are suitable for a private repository.
-
-### Signalflow-Templates
-
-`signalflow-templates` a single container that contains templates for docker-compose, dockerfiles, scripts that may be useful
+`cincibrainlab/signalflow-preprocessing`
 
 ## License
 
