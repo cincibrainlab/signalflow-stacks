@@ -7,29 +7,66 @@ The Docker container contains key software: Matlab 2023a and open-source toolkit
 
 The current images are built using advanced VNC software (Kasm workstation) and should be comparable to working on a local desktop PC. We have made two containers available based on Ubuntu 20.04 LTS - a CPU-only container and a larger CUDA GPU-enabled container. 
 
-
 ## Quick Start
 Example:
 * :cpu (CPU only)
 
 ``` 
-docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv \
+docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/srv \
        -e   cincibrainlab/signalflow-preprocessing:cpu
 ```
 * :gpu (Nvidia CUDA GPU support)
 
 ```
-docker run --rm -it --shm-size=512m -p 6901:6901 -v /path/to/local/storage/:/srv --gpus:all \ 
-       -e MLM_LICENSE cincibrainlab/signalflow-preprocessing:gpu
+docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/srv --gpus:all \ 
+       cincibrainlab/signalflow-preprocessing:gpu
 ```
 
 DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-preprocessing/general
 
+Here's a revised version for your README in markdown:
+
+---
+
+## MATLAB Licensing Options
+
+Choose one of the methods below to associate a license with your container:
+
+### 1. Web Login:
+- Launch MATLAB 2023a without a valid license file to get a login prompt for web activation.
+
+### 2. License Server:
+- Modify the `MLM_LICENSE_FILE` environmental variable to point to a valid MATLAB license server.
+- Ensure a valid hostname is provided so the server acknowledges it.
+
+### 3. Direct License File Linking:
+- MATLAB in the container defaults to checking `/licenses/license` for a license file.
+- To connect a license, use the `volume` command to map your license file to the above path.
+
+#### Network, Individual, or Student License:
+
+**Docker Run**:
+```
+docker run -v my/path/network.lic:/licenses/license cincibrainlab/signalflow-preprocessing:gpu
+```
+
+**Docker Compose**:
+```
+volumes:
+    - ${MATLAB_LICENSE_FILE}:/licenses/license.lic  # File name specified in .env file
+```
+
+Ensure `HOSTNAME` and `MAC_ADDRESS` align with the license's requirements.
+
+---
+
+URLs:
+- [MATLAB Licensing Documentation](https://www.mathworks.com/services/licensing.html) (For reference; added for completeness)
 
 ## Features
-Provides a full Linux desktop environment with Xfce, a scientific computing environment with Matlab preconfigured for EEG preprocessing.
+Provides a full Linux desktop environment with XFCE, a scientific computing environment with Matlab preconfigured for EEG preprocessing.
 
-*Matlab Toolboxes installed suitable for HAPPE, MADE pipelines*
+*Matlab Toolboxes installed suitable for Signalflow, EEGLAB, Fieldtrip, HAPPE, MADE pipelines*
 - Parallel Computing Toolbox
 - Image Processing Toolbox  
 - Signal Processing Toolbox
@@ -40,6 +77,10 @@ Provides a full Linux desktop environment with Xfce, a scientific computing envi
 - Curve Fitting Toolbox
 
 * local use is added to the SUDO group. If container is modified, you can persist changes by using `docker commit` and using the saved image on subsequent `docker run` or `docker-compose` commands.
+
+## MATLAB Student Licenses
+
+To change the username that executes MATLAB configure an environmental variable `STUDENT_USER`. This user will adopt the environment and permissions of the `kasm_user` but MATLAB will see the `STUDENT_USER` that will match the license file. `HOSTNAME` and `MAC_ADDRESS` can also be set. A convenience MATLAB icon, named MATLAB 2023a (Student) is placed on the default desktop.
 
 ## Repository Files
 
