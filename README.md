@@ -5,9 +5,7 @@
 
 The Docker container contains key software: Matlab 2023a and open-source toolkits (i.e., EEGLAB). The container uses your own data directories and MATLAB license. Changes to the linked data directories stay persistent even after stopping the container. The container can be deployed on any number of workstations and the image is standardized to be fully functional.
 
-![Demonstration](sfpreprocess.gif)
-
-<video src="sfpre.mp4" controls title="Demonstration"></video>
+![Demonstration](sfpre.gif)
 
 The current images are built using advanced VNC software (Kasm workstation) and should be comparable to working on a local desktop PC. We have made two containers available based on Ubuntu 20.04 LTS - a CPU-only container and a larger CUDA GPU-enabled container. 
 
