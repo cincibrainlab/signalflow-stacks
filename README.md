@@ -5,28 +5,36 @@
 
 The Docker container contains key software: Matlab 2023a and open-source toolkits (i.e., EEGLAB). The container uses your own data directories and MATLAB license. Changes to the linked data directories stay persistent even after stopping the container. The container can be deployed on any number of workstations and the image is standardized to be fully functional.
 
+![Demonstration](sfpreprocess.gif)
+
+<video src="sfpre.mp4" controls title="Demonstration"></video>
+
 The current images are built using advanced VNC software (Kasm workstation) and should be comparable to working on a local desktop PC. We have made two containers available based on Ubuntu 20.04 LTS - a CPU-only container and a larger CUDA GPU-enabled container. 
 
 ## Quick Start
 Example:
 * :cpu (CPU only)
-
 ``` 
 docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/srv \
-       -e   cincibrainlab/signalflow-preprocessing:cpu
+       -v path/to/license.lic:/licenses/license.lic cincibrainlab/signalflow-preprocessing:cpu
 ```
-* :gpu (Nvidia CUDA GPU support)
 
+* :gpu (Nvidia CUDA GPU support)
 ```
 docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/srv --gpus:all \ 
        cincibrainlab/signalflow-preprocessing:gpu
 ```
 
+Access MATLAB via browser at https://localhost:10100 with the user `kasm_user` and password `vncpassword`
+
+- port can be modified to run multple simutaneous instances on same PC
+- use 'https' NOT 'http'
+- change default password by specifying environmental variable `VNC_PW` (i.e., -e VNC_PW=otherpassword)
+- see licensing below for troubleshooting
+- access PC through network by specifying IP address / hostname + any firewall protection
+
 DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-preprocessing/general
 
-Here's a revised version for your README in markdown:
-
----
 
 ## MATLAB Licensing Options
 
@@ -47,7 +55,12 @@ Choose one of the methods below to associate a license with your container:
 
 **Docker Run**:
 ```
-docker run -v my/path/network.lic:/licenses/license cincibrainlab/signalflow-preprocessing:gpu
+# Student Example
+docker run --rm -it --shm-size=512m -e STUDENT_USER=<USERNAME> --hostname <HOSTID> --mac-address <00:00:00:00:00:00> -v C:\dev\licenses\license.lic:/licenses/license.lic -p 10100:6901 cincibrainlab/signalflow-preprocessing:cpu
+
+# Network License Example
+docker run --rm -it --shm-size=512m --hostname ClusterAccount -v C:\dev\licenses\network.lic:/licenses/license.lic -p 10100:6901 cincibrainlab/signalflow-preprocessing:cpu
+
 ```
 
 **Docker Compose**:

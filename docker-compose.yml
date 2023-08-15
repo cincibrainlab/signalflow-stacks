@@ -7,8 +7,8 @@ services:
     environment:
       - VNC_PW=password
       - MLM_LICENSE_FILE=/licenses/license.lic
-      - MW_CUDA_FORWARD_COMPATIBILITY=1
-      - CUDA_VISIBLE_DEVICES=GPU-f7d42825-5d5a-f356-291f-898ed4f5efef
+      # - MW_CUDA_FORWARD_COMPATIBILITY=1
+      # - CUDA_VISIBLE_DEVICES=GPU-f7d42825-5d5a-f356-291f-898ed4f5efef 
       - HOST=${HOSTNAME}
       - STUDENT_USER=${STUDENT_USER}
     hostname: ${HOSTNAME}
