@@ -1,7 +1,7 @@
-# SignalFlow-Preprocessing
+# SignalFlow-Datascience
 ## SignalFlow Docker Stacks
 
-*SignalFlow-Preprocessing* is a ready-to-run workstation in your browser for Matlab-based EEG preprocessing pipelines. 
+*SignalFlow-Datascience* is a ready-to-run workstation in your browser for Matlab-based EEG preprocessing pipelines. This version includes Rstudio and Jupyter Notebooks.
 
 The Docker container contains key software: Matlab 2023a and open-source toolkits (i.e., EEGLAB). The container uses your own data directories and MATLAB license. Changes to the linked data directories stay persistent even after stopping the container. The container can be deployed on any number of workstations and the image is standardized to be fully functional.
 
@@ -14,13 +14,13 @@ Example:
 * :cpu (CPU only)
 ``` 
 docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/srv \
-       -v path/to/license.lic:/licenses/license.lic cincibrainlab/signalflow-preprocessing:cpu
+       -v path/to/license.lic:/licenses/license.lic cincibrainlab/signalflow-datascience:cpu
 ```
 
 * :gpu (Nvidia CUDA GPU support)
 ```
 docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/srv --gpus:all \ 
-       cincibrainlab/signalflow-preprocessing:gpu
+       cincibrainlab/signalflow-datascience:gpu
 ```
 
 Access MATLAB via browser at https://localhost:10100 with the user `kasm_user` and password `vncpassword`
@@ -31,7 +31,7 @@ Access MATLAB via browser at https://localhost:10100 with the user `kasm_user` a
 - see licensing below for troubleshooting
 - access PC through network by specifying IP address / hostname + any firewall protection
 
-DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-preprocessing/general
+DockerHub: https://hub.docker.com/repository/docker/cincibrainlab/signalflow-datascience/general
 
 
 ## MATLAB Licensing Options
@@ -54,10 +54,10 @@ Choose one of the methods below to associate a license with your container:
 **Docker Run**:
 ```
 # Student Example
-docker run --rm -it --shm-size=512m -e STUDENT_USER=<USERNAME> --hostname <HOSTID> --mac-address <00:00:00:00:00:00> -v C:\dev\licenses\license.lic:/licenses/license.lic -p 10100:6901 cincibrainlab/signalflow-preprocessing:cpu
+docker run --rm -it --shm-size=512m -e STUDENT_USER=<USERNAME> --hostname <HOSTID> --mac-address <00:00:00:00:00:00> -v C:\dev\licenses\license.lic:/licenses/license.lic -p 10100:6901 cincibrainlab/signalflow-datascience:cpu
 
 # Network License Example
-docker run --rm -it --shm-size=512m --hostname ClusterAccount -v C:\dev\licenses\network.lic:/licenses/license.lic -p 10100:6901 cincibrainlab/signalflow-preprocessing:cpu
+docker run --rm -it --shm-size=512m --hostname ClusterAccount -v C:\dev\licenses\network.lic:/licenses/license.lic -p 10100:6901 cincibrainlab/signalflow-datascience:cpu
 
 ```
 
@@ -75,7 +75,7 @@ URLs:
 - [MATLAB Licensing Documentation](https://www.mathworks.com/services/licensing.html) (For reference; added for completeness)
 
 ## Features
-Provides a full Linux desktop environment with XFCE, a scientific computing environment with Matlab preconfigured for EEG preprocessing.
+Provides a full Linux desktop environment with XFCE, a scientific computing environment with Matlab preconfigured for EEG analysis.
 
 *Matlab Toolboxes installed suitable for Signalflow, EEGLAB, Fieldtrip, HAPPE, MADE pipelines*
 - Parallel Computing Toolbox
@@ -87,7 +87,10 @@ Provides a full Linux desktop environment with XFCE, a scientific computing envi
 - Wavelet Toolbox
 - Curve Fitting Toolbox
 
-* local use is added to the SUDO group. If container is modified, you can persist changes by using `docker commit` and using the saved image on subsequent `docker run` or `docker-compose` commands.
+* RStudio with R 4.3.1
+* Python (including Juypter Lab and Ananconda)
+
+* local user is added to the SUDO group. If container is modified, you can persist changes by using `docker commit` and using the saved image on subsequent `docker run` or `docker-compose` commands.
 
 ## MATLAB Student Licenses
 

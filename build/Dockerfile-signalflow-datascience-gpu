@@ -1,0 +1,397 @@
+#FROM kasmweb/core-ubuntu-focal:1.13.1
+FROM kasmweb/core-cuda-focal:1.13.1
+#FROM kasmweb/core-nvidia-focal:develop
+
+USER root
+
+ENV HOME /home/kasm-default-profile
+ENV STARTUPDIR /dockerstartup
+ENV INST_SCRIPTS $STARTUPDIR/install
+WORKDIR $HOME
+
+######### Customize Container Here ###########
+ENV DEBIAN_FRONTEND="noninteractive" TZ="Etc/UTC"
+
+###### ADD MATLAB ######
+# Copyright 2021-2023 The MathWorks, Inc.
+# Builds Docker image with 
+# 1. MATLAB - Using MPM
+
+## Sample Build Command:
+# docker build --build-arg MATLAB_RELEASE=r2023a \
+#              --build-arg MATLAB_PRODUCT_LIST="MATLAB Deep_Learning_Toolbox Symbolic_Math_Toolbox"\
+#              --build-arg LICENSE_SERVER=12345@hostname.com \
+#              -t my_matlab_image_name .
+
+# Specify release of MATLAB to build. (use lowercase, default is r2023a)
+ARG MATLAB_RELEASE=r2023a
+
+# Specify the list of products to install into MATLAB, 
+ARG MATLAB_PRODUCT_LIST="MATLAB Parallel_Computing_Toolbox Image_Processing_Toolbox Signal_Processing_Toolbox Curve_Fitting_Toolbox Image_Processing_Toolbox Optimization_Toolbox Statistics_and_Machine_Learning_Toolbox Wavelet_Toolbox"
+
+# ARG MATLAB_PRODUCT_LIST="MATLAB"
+
+# Optional Network License Server information
+ARG LICENSE_SERVER
+
+# If LICENSE_SERVER is provided then SHOULD_USE_LICENSE_SERVER will be set to "_use_lm"
+ARG SHOULD_USE_LICENSE_SERVER=${LICENSE_SERVER:+"_with_lm"}
+
+# Default DDUX information
+ARG MW_CONTEXT_TAGS=MATLAB_PROXY:JUPYTER:MPM:V1
+
+ARG LICENSE_SERVER
+
+# If license server information is available, then use it to set environment variable
+ENV MLM_LICENSE_FILE=${LICENSE_SERVER}
+
+# Select base Jupyter image based on whether LICENSE_SERVER is provided
+# FROM base_jupyter_image${SHOULD_USE_LICENSE_SERVER}
+ARG MW_CONTEXT_TAGS
+ARG MATLAB_RELEASE
+ARG MATLAB_PRODUCT_LIST
+
+## Installing Dependencies for Ubuntu 20.04
+# For MATLAB : Get base-dependencies.txt from matlab-deps repository on GitHub
+# For mpm : wget, unzip, ca-certificates
+# For MATLAB Integration for Jupyter (VNC): xvfb dbus-x11 firefox xfce4 xfce4-panel xfce4-session xfce4-settings xorg xubuntu-icon-theme curl xscreensaver
+
+# List of MATLAB Dependencies for Ubuntu 20.04 and specified MATLAB_RELEASE
+ARG MATLAB_DEPS_REQUIREMENTS_FILE="https://raw.githubusercontent.com/mathworks-ref-arch/container-images/main/matlab-deps/${MATLAB_RELEASE}/ubuntu20.04/base-dependencies.txt"
+ARG MATLAB_DEPS_REQUIREMENTS_FILE_NAME="matlab-deps-${MATLAB_RELEASE}-base-dependencies.txt"
+
+# Install dependencies
+RUN wget ${MATLAB_DEPS_REQUIREMENTS_FILE} -O ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} && \
+    export DEBIAN_FRONTEND=noninteractive && apt-get update && \
+    xargs -a ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} -r apt-get install --no-install-recommends -y \
+    && apt-get remove -y gnome-screensaver  \
+    && apt-get clean \
+    && apt-get -y autoremove \
+    && rm -rf /var/lib/apt/lists/* ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} \
+    && wget -q https://www.mathworks.com/mpm/glnxa64/mpm && \ 
+    chmod +x mpm && \
+    ./mpm install \
+    --release=${MATLAB_RELEASE} \
+    --destination=/opt/matlab \
+    --products ${MATLAB_PRODUCT_LIST} && \
+    rm -f mpm /tmp/mathworks_root.log && \
+    ln -s /opt/matlab/bin/matlab /usr/local/bin/matlab && \
+    chown -R 1000:0 /opt/matlab
+
+
+# Install patched glibc - See https://github.com/mathworks/build-glibc-bz-19329-patch
+WORKDIR /packages
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && apt-get clean && apt-get autoremove && \
+    wget -q https://github.com/mathworks/build-glibc-bz-19329-patch/releases/download/ubuntu-focal/all-packages.tar.gz && \
+    tar -x -f all-packages.tar.gz \
+    --exclude glibc-*.deb \
+    --exclude libc6-dbg*.deb && \
+    apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
+    rm -fr /packages
+
+# Create the .desktop file
+RUN echo '[Desktop Entry]\
+\nVersion=1.0\
+\nType=Application\
+\nName=MATLAB R2023a\
+\nComment=MATLAB R2023a software\
+\nExec=/usr/local/bin/matlab -desktop\
+\nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
+\nTerminal=false\
+\nPath=/srv\
+\nCategories=Development;Simulation;Education;Science;\
+\nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && \
+chmod +x $HOME/Desktop/matlab.desktop && \
+chown 1000:0 $HOME/Desktop/matlab.desktop
+
+ENV MLM_LICENSE_FILE=/licenses/license.lic
+
+# RUN cd /tmp \
+#     && wget -q https://www.mathworks.com/mpm/glnxa64/mpm \
+#     && chmod +x mpm \
+#     && ./mpm install --release=r2023a --destination=/opt/matlab --products Curve_Fitting_Toolbox \
+#     && rm mpm
+
+RUN bash -c 'printf "kasm-user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/kasm-user'
+
+### Envrionment config
+ENV DEBIAN_FRONTEND=noninteractive \
+    SKIP_CLEAN=true \
+    KASM_RX_HOME=$STARTUPDIR/kasmrx \
+    DONT_PROMPT_WSL_INSTALL="No_Prompt_please" \
+    INST_DIR=$STARTUPDIR/install \
+    INST_SCRIPTS="/ubuntu/install/tools/install_tools_deluxe.sh \
+                  /ubuntu/install/misc/install_tools.sh \
+                  /ubuntu/install/chrome/install_chrome.sh \
+                  /ubuntu/install/firefox/install_firefox.sh \
+                  /ubuntu/install/vs_code/install_vs_code.sh \
+                  /ubuntu/install/only_office/install_only_office.sh \
+                  /ubuntu/install/cleanup/cleanup.sh"
+
+# Copy install scripts
+COPY ./src/ $INST_DIR
+
+# Run installations
+RUN \
+  for SCRIPT in $INST_SCRIPTS; do \
+    bash ${INST_DIR}${SCRIPT}; \
+  done && \
+  $STARTUPDIR/set_user_permission.sh $HOME && \
+  rm -f /etc/X11/xinit/Xclients && \
+  chown 1000:0 $HOME && \
+  mkdir -p /home/kasm-user && \
+  chown -R 1000:0 /home/kasm-user && \
+  rm -Rf ${INST_DIR}
+
+# Install SignalFlowEEG and dependencies
+WORKDIR /TOOLBOXES
+COPY ./install_eeg_toolboxes.sh .
+RUN chmod +x ./install_eeg_toolboxes.sh && \
+  ./install_eeg_toolboxes.sh && \
+  chown -R 1000:0 /TOOLBOXES
+WORKDIR $HOME
+
+# Use Student Username if ENV variable STUDENT_USER exists
+COPY start_student_matlab.sh /usr/local/bin/start_student_matlab.sh
+RUN chmod +x /usr/local/bin/start_student_matlab.sh
+
+# Create student icon
+# Create the .desktop file
+RUN echo '[Desktop Entry]\
+\nVersion=1.0\
+\nType=Application\
+\nName=MATLAB R2023a (Student)\
+\nComment=MATLAB R2023a software\
+\nExec=/usr/local/bin/start_student_matlab.sh\
+\nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
+\nTerminal=true\
+\nPath=/srv\
+\nCategories=Development;Simulation;Education;Science;\
+\nStartupNotify=true' >  $HOME/Desktop/matlab_student.desktop && \
+chmod +x $HOME/Desktop/matlab_student.desktop && \
+chown 1000:0 $HOME/Desktop/matlab_student.desktop
+
+
+  # R INSTALLATION
+# R Packages
+# +--------------+----------------------------------------------+
+# | Package      | Description                                  |
+# +--------------+----------------------------------------------+
+# | tidyverse    | Collection of R packages for data science    |
+# | pandoc       | Document converter                           |
+# | pandoc-citeproc | Citation processing for Pandoc            |
+# | Quarto       | Next generation of R Markdown                |
+# | pacman       | Package management and utility functions     |
+# | shiny        | Web application framework for R              |
+# | jsonlite     | JSON parser and generator                    |
+# | ggplot2      | Data visualization                           |
+# | htmltools    | HTML manipulation and rendering              |
+# | remotes      | R package installation from remote repos     |
+# | renv         | Project environments with R                  |
+# | knitr        | Dynamic report generation with R             |
+# | rmarkdown    | Dynamic documents with R                     |
+# | quarto       | Next generation of R Markdown                |
+# | argparser    | Command line argument parser                 |
+# | this.path    | File path manipulation                       |
+# | here         | File path manipulation                       |
+# | languageserver | Language server protocol for R             |
+# | officer      | Manipulation of Microsoft Word and PPTX docs |
+# | flextable    | Create and format tables                     |
+# | nlme         | Linear and nonlinear mixed effects models    |
+# | emmeans      | Estimated marginal means                     |
+# | ggthemes     | Extra themes for ggplot2                     |
+# | broom.mixed  | Tidying methods for mixed models             |
+# | ggsignif     | Significance brackets for ggplot2            |
+# +--------------+----------------------------------------------+
+
+#RStudio
+# Set the R_LIBS_SITE environment variable
+ENV R_LIBS_SITE=/usr/local/lib/R/site-library 
+ARG QUARTO_VERSION="1.4.294"
+
+RUN  mkdir -p ${R_LIBS_SITE} &&  chown -R 1000:0 ${R_LIBS_SITE} && \
+    apt-get update && apt-get -y install \
+        software-properties-common \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' \
+    && apt-get update && apt-get install -y \
+        gdebi-core \
+        r-base \
+    && cd /tmp && wget https://download1.rstudio.org/electron/focal/amd64/rstudio-2023.06.1-524-amd64.deb \
+    && gdebi --n rstudio-*-amd64.deb \
+    && rm -f rstudio-*-amd64.deb \
+    && sudo sed -i 's|Exec=/usr/lib/rstudio/rstudio %F|Exec=/usr/lib/rstudio/rstudio --no-sandbox /srv |' /usr/share/applications/rstudio.desktop \
+    && cp /usr/share/applications/rstudio.desktop $HOME/Desktop/ \
+    && chmod +x $HOME/Desktop/*.desktop && \
+    apt-get install -y  --no-install-recommends\
+    libxml2-dev \
+    libcairo2-dev \
+    libgit2-dev \
+    default-libmysqlclient-dev \
+    libpq-dev \
+    libsasl2-dev \
+    libsqlite3-dev \
+    libssh2-1-dev \
+    libxtst6 \
+    libcurl4-openssl-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    unixodbc-dev \
+    pandoc \
+    pandoc-citeproc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    R -e "install.packages('tidyverse', repos='http://cran.rstudio.com/', Ncpus=10)" && \
+    R -e "install.packages('pacman', repos='http://cran.rstudio.com/', Ncpus=10)" && \
+    R -e "pacman::p_load(\
+        tidyverse,\
+        shiny, \
+        jsonlite, \
+        ggplot2, \
+        htmltools, \
+        remotes, \
+        renv, \
+        knitr, \
+        rmarkdown, \
+        quarto, \
+        argparser, \
+        this.path, \
+        here, \
+        languageserver, \
+        officer, \
+        flextable, \ 
+        nlme, \
+        emmeans, \
+        ggthemes, \
+        broom.mixed, \
+        ggsignif)" &&\ 
+        curl -o quarto-linux-amd64.deb -L https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb && \
+        gdebi --non-interactive quarto-linux-amd64.deb && quarto install tool tinytex
+
+
+# RUN echo "/usr/bin/desktop_ready && /opt/sublime_text/sublime_text &" > $STARTUPDIR/custom_startup.sh \
+# && chmod +x $STARTUPDIR/custom_startup.sh
+
+# RUN wget https://cdn.hipwallpaper.com/i/92/9/0Ts6mr.png -O /usr/share/extra/backgrounds/bg_default.png
+
+
+# +------------------+----------------------------------------------+
+# | Package          | Description                                  |
+# +------------------+----------------------------------------------+
+# | s3fs             | Amazon S3 filesystems                        |
+# | bokeh            | Interactive visualizations for web browsers  |
+# | nibabel          | Neuroimaging data formats                    |
+# | joblib           | Lightweight pipelining and parallelism       |
+# | h5py             | Reading and writing HDF5 files               |
+# | pooch            | Downloading and managing data files          |
+# | jupyterlab       | Web-based interactive development            |
+# | ipywidgets       | Interactive HTML widgets for Jupyter         |
+# | ipyvtklink       | Bi-directional communication with VTK        |
+# | vtk              | 3D computer graphics and visualization       |
+# | pyvista          | 3D plotting and mesh analysis with VTK       |
+# | pyvistaqt        | Integrating PyVista with PyQt5               |
+# | PyQt5            | Desktop applications with Qt5                |
+# | matplotlib       | Static, animated, and interactive visuals    |
+# | nb_conda_kernels | Conda environment-based kernels              |
+# | python           | Python programming language                  |
+# | python-blosc     | Blosc compression library wrapper            |
+# | cytoolz          | Fast, memory-efficient functional tools      |
+# | dask             | Parallel and distributed computing           |
+# | lz4              | LZ4 compression and decompression            |
+# | nomkl            | Disable MKL in NumPy and other packages      |
+# | numpy            | Numerical computing                          |
+# | pandas           | Data manipulation and analysis               |
+# | tini             | Minimal init system for containers           |
+# | jupyter-matlab-proxy | JupyterLab extension for MATLAB          |
+# | jupyter_ai       | JupyterLab extension for AI development      |
+# | openai           | OpenAI API client library                    |
+# | jupyterlab_github| JupyterLab extension for GitHub integration  |
+# +------------------+----------------------------------------------+
+
+# Python
+
+COPY resources/install_python_packages.sh /tmp/
+COPY resources/install_anaconda.sh /tmp/
+COPY resources/install_conda_packages.sh /tmp/
+
+
+# install apt packages
+RUN apt-get update && apt-get install -y \
+        python3-pip libasound2 libegl1-mesa libgl1-mesa-glx \
+        libxcomposite1 libxcursor1 libxi6 libxrandr2 libxss1 \
+        libxtst6 gdal-bin ffmpeg vlc dnsutils iputils-ping \
+        git remmina remmina-plugin-rdp
+
+# Install Anaconda3
+COPY resources/install_anaconda.sh /tmp/
+ARG CONDA_DIR=/opt/anaconda3
+
+# install MicroMamba
+ARG VERSION=1.4.9
+ARG TARGETARCH=amd64
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV ENV_NAME="base"
+ENV MAMBA_ROOT_PREFIX=$CONDA_DIR
+ENV MAMBA_EXE="/usr/local/bin/micromamba"
+ARG mne_v=v0.23.0
+ENV \
+    MNE_3D_BACKEND=pyvista \
+    MNE_3D_OPTION_ANTIALIAS=false\
+    START_XVFB=true
+
+ENV BROWSER /usr/bin/google-chrome
+ENV JUPYTER_DATA_DIR=/srv
+COPY resources/spyder.desktop $HOME/Desktop/spyder.desktop
+COPY resources/jupyter.desktop $HOME/Desktop/jupyter.desktop
+
+RUN bash /tmp/install_anaconda.sh && \
+sudo apt update && \
+sudo apt install --no-install-recommends \
+        pipx \
+        bzip2 \
+        ca-certificates \
+        strace \
+        qt5-default -y \
+&& pipx ensurepath \
+&& which pipx \
+&& alias pip3=/usr/bin/pipx \
+&& alias pip=/usr/bin/pipx  && \
+    test "$TARGETARCH" = 'amd64' && export ARCH='64'; \
+    test "$TARGETARCH" = 'arm64' && export ARCH='aarch64'; \
+    test "$TARGETARCH" = 'ppc64le' && export ARCH='ppc64le'; \
+    curl -L "https://micromamba.snakepit.net/api/micromamba/linux-${ARCH}/${VERSION}" | \
+    tar -xj -C "/tmp" "bin/micromamba" && \
+    mv "/tmp/bin/micromamba" "/usr/local/bin" && \
+    micromamba shell init --shell bash --root-prefix=${CONDA_DIR} && \
+    micromamba install --yes -n base -c conda-forge nb_conda_kernels && \
+    micromamba clean -tipy && \
+# Apt-get operations
+    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+# Cleanup operations
+    find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
+    find ${CONDA_DIR} -type f,l -name '*.pyc' -delete && \
+    find ${CONDA_DIR} -type f,l -name '*.js.map' -delete && \
+    rm -rf ${CONDA_DIR}pkgs && \
+# Jupyter lab build
+    chown -R 1000:0 ${CONDA_DIR} && \
+    sed -i "s|--ip=127.0.0.1|--ip=0.0.0.0 --notebook-dir=$JUPYTER_DATA_DIR|;" ${HOME}/Desktop/jupyter.desktop
+
+
+######### End Customizations ###########
+
+RUN chown 1000:0 $HOME
+RUN $STARTUPDIR/set_user_permission.sh $HOME
+
+ENV HOME /home/kasm-user
+WORKDIR $HOME
+RUN mkdir -p $HOME && chown -R 1000:0 $HOME
+
+USER 1000
