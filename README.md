@@ -8,7 +8,8 @@ The source files for each image are available and drawn from other opensource pr
 
 ## Selecting an Image:
 
-We maintain a set of image definitions in the cincibrainlab/signalflow-stacks GitHub repository. Sources for each image are maintained in this repository as branches.
+We maintain two base images. Each image has a :cpu or :gpu tag depending on your environment.
+
 
 ![SF panel](sf-stacks-panel.png)
 
