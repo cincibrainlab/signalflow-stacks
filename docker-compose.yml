@@ -5,6 +5,7 @@ services:
     image: cincibrainlab/signalflow-preprocessing:gpu
     container_name: signalflow-preprocessing-01
     environment:
+      - JUPYTER_TOKEN=password
       - VNC_PW=password
       - MLM_LICENSE_FILE=/licenses/license.lic
       # - MW_CUDA_FORWARD_COMPATIBILITY=1
