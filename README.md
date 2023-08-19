@@ -23,6 +23,8 @@ docker run --rm -it --shm-size=512m -p 10100:6901 -v /path/to/local/storage/:/sr
        cincibrainlab/signalflow-datascience:gpu
 ```
 
+- Jupyter WWW access: Expose port 8888 (-p 8888:8888) to expose Jupyter notebooks directly to web browsers. This is not the default behavior to reduce number of expose ports.
+
 Access MATLAB via browser at https://localhost:10100 with the user `kasm_user` and password `vncpassword`
 
 - port can be modified to run multple simutaneous instances on same PC
