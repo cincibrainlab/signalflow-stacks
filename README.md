@@ -9,6 +9,11 @@ The Docker container contains key software: Matlab 2023a and open-source toolkit
 
 The current images are built using advanced VNC software (Kasm workstation) and should be comparable to working on a local desktop PC. We have made two containers available based on Ubuntu 20.04 LTS - a CPU-only container and a larger CUDA GPU-enabled container. 
 
+We have designed a Quarto Analysis Book template specifically for these containers to streamline the preparation and publication of scientific manuscripts and reports. This platform facilitates collaboration among multiple users and integrates various data science tools, including R and Python, within a single environment. This method isolates R/Python environments.
+[Quarto Analysis Book Template](https://github.com/cincibrainlab/quarto_analysis_book_template.git)
+
+See repository: 
+
 ## Quick Start
 Example:
 * :cpu (CPU only)
