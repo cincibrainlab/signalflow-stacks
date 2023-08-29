@@ -1,8 +1,9 @@
 version: '3.8'
 services:
   signalflow-preprocessing:
-    image: cincibrainlab/signalflow-datascience:cpu
+    image: cincibrainlab/signalflow-preprocessing:cpu
     #image: cincibrainlab/signalflow-datascience:gpu
+    # image: Dockerfile-signalflow-preprocessing-cpu
     container_name: ${CONTAINER_NAME}
     environment:
       - JUPYTER_TOKEN=password

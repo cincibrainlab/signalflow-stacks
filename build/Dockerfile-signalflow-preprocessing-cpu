@@ -149,7 +149,8 @@ RUN chmod +x ./install_eeg_toolboxes.sh && \
   ./install_eeg_toolboxes.sh && \
   chown -R 1000:0 /TOOLBOXES
 WORKDIR $HOME
-RUN sed -i "s/ICABINARY = 'binica.exe';/ICABINARY = '/TOOLBOXES/BINICA_Binary/binica.exe';/" /TOOLBOXES/eeglab/functions/sigprocfunc/icadefs.m
+RUN cp /TOOLBOXES/BINICA_Binary/binica.exe /TOOLBOXES/eeglab/functions/supportfiles/
+RUN cp /TOOLBOXES/BINICA_Binary/ica_linux /TOOLBOXES/eeglab/functions/supportfiles/
 
 
 # Use Student Username if ENV variable STUDENT_USER exists
