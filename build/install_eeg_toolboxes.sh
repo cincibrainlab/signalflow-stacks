@@ -10,3 +10,5 @@ git clone --recurse-submodules https://github.com/brainstorm-tools/brainstorm3.g
 git clone https://github.com/PINE-Lab/HAPPE.git
 # MADE
 git clone https://github.com/ChildDevLab/MADE-EEG-preprocessing-pipeline.git
+# Binica
+git clone https://github.com/cincibrainlab/BINICA_Binary.git

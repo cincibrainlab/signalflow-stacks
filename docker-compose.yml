@@ -1,30 +1,22 @@
 version: '3.8'
 services:
   signalflow-preprocessing:
-    #image: cincibrainlab/signalflow-preprocessing:cpu
-    image: cincibrainlab/signalflow-preprocessing:gpu
-    container_name: signalflow-preprocessing-01
+    image: cincibrainlab/signalflow-datascience:cpu
+    #image: cincibrainlab/signalflow-datascience:gpu
+    container_name: ${CONTAINER_NAME}
     environment:
       - JUPYTER_TOKEN=password
       - VNC_PW=password
       - MLM_LICENSE_FILE=/licenses/license.lic
-      # - MW_CUDA_FORWARD_COMPATIBILITY=1
-      # - CUDA_VISIBLE_DEVICES=GPU-f7d42825-5d5a-f356-291f-898ed4f5efef 
-      - HOST=${HOSTNAME}
+      - HOST=P16-4023
       - STUDENT_USER=${STUDENT_USER}
-    hostname: ${HOSTNAME}
+    hostname: P16-4023
     mac_address: ${MAC_ADDRESS}
     ports:
       - "${WEB_PORT}:6901"
     volumes:
       - ${LOCAL_FOLDER}:/srv
       - ${MATLAB_LICENSE_FILE}:/licenses/license.lic
-    shm_size: 512m
+    shm_size: 16gb
     working_dir: /srv
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+
