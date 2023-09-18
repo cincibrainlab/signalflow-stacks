@@ -149,6 +149,9 @@ RUN chmod +x ./install_eeg_toolboxes.sh && \
   ./install_eeg_toolboxes.sh && \
   chown -R 1000:0 /TOOLBOXES
 WORKDIR $HOME
+RUN cp /TOOLBOXES/BINICA_Binary/binica.exe /TOOLBOXES/eeglab/functions/supportfiles/
+RUN cp /TOOLBOXES/BINICA_Binary/ica_linux /TOOLBOXES/eeglab/functions/supportfiles/
+
 
 # Use Student Username if ENV variable STUDENT_USER exists
 COPY start_student_matlab.sh /usr/local/bin/start_student_matlab.sh
