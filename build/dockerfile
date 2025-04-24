@@ -2,7 +2,7 @@
 # workspaces-images % docker buildx build --platform=linux/amd64,linux/arm64 -t ghcr.io/cincibrainlab/signalfloweeg-autoclean:latest -f dockerfile-kasm-ubuntu-noble-dind . --push
 
 ARG BASE_TAG="develop"
-ARG BASE_IMAGE="core-ubuntu-jammy"
+ARG BASE_IMAGE="core-ubuntu-noble"
 FROM kasmweb/$BASE_IMAGE:$BASE_TAG
 USER root
 
@@ -98,10 +98,10 @@ RUN apt-get update && \
 #              -t my_matlab_image_name .
 
 # Specify release of MATLAB to build. (use lowercase, default is r2023a)
-ARG MATLAB_RELEASE=r2023a
+ARG MATLAB_RELEASE=r2024b
 
 # Specify the list of products to install into MATLAB, 
-ARG MATLAB_PRODUCT_LIST="MATLAB Parallel_Computing_Toolbox Image_Processing_Toolbox Signal_Processing_Toolbox Curve_Fitting_Toolbox Image_Processing_Toolbox Optimization_Toolbox Statistics_and_Machine_Learning_Toolbox Wavelet_Toolbox"
+ARG MATLAB_PRODUCT_LIST="MATLAB Parallel_Computing_Toolbox Signal_Processing_Toolbox Curve_Fitting_Toolbox Image_Processing_Toolbox Optimization_Toolbox Statistics_and_Machine_Learning_Toolbox Wavelet_Toolbox"
 
 # ARG MATLAB_PRODUCT_LIST="MATLAB"
 
@@ -131,8 +131,8 @@ ARG MATLAB_PRODUCT_LIST
 # For MATLAB Integration for Jupyter (VNC): xvfb dbus-x11 firefox xfce4 xfce4-panel xfce4-session xfce4-settings xorg xubuntu-icon-theme curl xscreensaver
 
 # List of MATLAB Dependencies for Ubuntu 20.04 and specified MATLAB_RELEASE
-ARG MATLAB_DEPS_REQUIREMENTS_FILE="https://raw.githubusercontent.com/mathworks-ref-arch/container-images/main/matlab-deps/${MATLAB_RELEASE}/ubuntu22.04/base-dependencies.txt"
-ARG MATLAB_DEPS_REQUIREMENTS_FILE_NAME="matlab-deps-${MATLAB_RELEASE}-base-dependencies.txt"
+ARG MATLAB_DEPS_REQUIREMENTS_FILE="https://raw.githubusercontent.com/mathworks-ref-arch/container-images/main/matlab-deps/${MATLAB_RELEASE}/ubuntu24.04/base-dependencies.txt"
+ARG MATLAB_DEPS_REQUIREMENTS_FILE_NAME="base-dependencies.txt"
 
 # Install dependencies
 RUN wget ${MATLAB_DEPS_REQUIREMENTS_FILE} -O ${MATLAB_DEPS_REQUIREMENTS_FILE_NAME} && \
@@ -154,15 +154,15 @@ RUN wget ${MATLAB_DEPS_REQUIREMENTS_FILE} -O ${MATLAB_DEPS_REQUIREMENTS_FILE_NAM
 
 
 # Install patched glibc - See https://github.com/mathworks/build-glibc-bz-19329-patch
-WORKDIR /packages
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && apt-get clean && apt-get autoremove && \
-    wget -q https://github.com/mathworks/build-glibc-bz-19329-patch/releases/download/ubuntu-focal/all-packages.tar.gz && \
-    tar -x -f all-packages.tar.gz \
-    --exclude glibc-*.deb \
-    --exclude libc6-dbg*.deb && \
-    apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
-    rm -fr /packages
+# WORKDIR /packages
+# RUN export DEBIAN_FRONTEND=noninteractive && \
+#     apt-get update && apt-get clean && apt-get autoremove && \
+#     wget -q https://github.com/mathworks/build-glibc-bz-19329-patch/releases/download/ubuntu-focal/all-packages.tar.gz && \
+#     tar -x -f all-packages.tar.gz \
+#     --exclude glibc-*.deb \
+#     --exclude libc6-dbg*.deb && \
+#     apt-get install --yes --no-install-recommends --allow-downgrades ./*.deb && \
+#     rm -fr /packages
 
 # Create the .desktop file
 RUN echo '[Desktop Entry]\
@@ -201,7 +201,6 @@ ENV DEBUG=false \
                   /ubuntu/install/misc/install_tools.sh \
                   /ubuntu/install/chrome/install_chrome.sh \
                   /ubuntu/install/chromium/install_chromium.sh \
-                  /ubuntu/install/sublime_text/install_sublime_text.sh \
                   /ubuntu/install/vs_code/install_vs_code.sh \
                   /ubuntu/install/cleanup/cleanup.sh"
 
@@ -216,7 +215,7 @@ COPY ./src/ $INST_DIR
 # Run installations
 RUN \
   for SCRIPT in $INST_SCRIPTS; do \
-    bash ${INST_DIR}${SCRIPT} || exit 1; \
+    bash ${INST_DIR}${SCRIPT}; \
   done && \
   $STARTUPDIR/set_user_permission.sh $HOME && \
   rm -f /etc/X11/xinit/Xclients && \

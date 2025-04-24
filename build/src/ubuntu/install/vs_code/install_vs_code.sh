@@ -15,9 +15,6 @@ rm vs_code.deb
 
 # Conveniences for python development
 apt-get update
-apt-get install -y python3-setuptools \
-                   python3-venv \
-                   python3-virtualenv
 
 # Cleanup
 if [ -z ${SKIP_CLEAN+x} ]; then
