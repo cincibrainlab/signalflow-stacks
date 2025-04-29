@@ -14,76 +14,76 @@ WORKDIR $HOME
 # Install and configure bash shell enhancements
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        bash-completion \
-        command-not-found \
-        git \
-        nano && \
+    bash-completion \
+    command-not-found \
+    git \
+    nano && \
     rm -rf /var/lib/apt/lists/*
 
 # Install necessary dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        curl \
-        git \
-        libxcb1 \
-        libxcb-render0 \
-        libxcb-shape0 \
-        libxcb-xfixes0 \
-        libxcb-randr0 \
-        libxcb-glx0 \
-        libxcb-keysyms1 \
-        libxcb-image0 \
-        libxcb-icccm4 \
-        libxcb-sync1 \
-        libxcb-util1 \
-        libxcb-xkb1 \
-        libxcb-cursor0 \
-        libx11-xcb1 \
-        libxrender1 \
-        libxi6 \
-        libxkbcommon-x11-0 \
-        gnome-keyring && \
+    curl \
+    git \
+    libxcb1 \
+    libxcb-render0 \
+    libxcb-shape0 \
+    libxcb-xfixes0 \
+    libxcb-randr0 \
+    libxcb-glx0 \
+    libxcb-keysyms1 \
+    libxcb-image0 \
+    libxcb-icccm4 \
+    libxcb-sync1 \
+    libxcb-util1 \
+    libxcb-xkb1 \
+    libxcb-cursor0 \
+    libx11-xcb1 \
+    libxrender1 \
+    libxi6 \
+    libxkbcommon-x11-0 \
+    gnome-keyring && \
     rm -rf /var/lib/apt/lists/*
 
 # Install additional build dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        cython3 \
-        pkg-config \
-        libcairo2-dev \
-        cmake \
-        build-essential && \
+    cython3 \
+    pkg-config \
+    libcairo2-dev \
+    cmake \
+    build-essential && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        curl \
-        git \
-        libxcb1 \
-        libxcb-render0 \
-        libxcb-shape0 \
-        libxcb-xfixes0 \
-        libxcb-randr0 \
-        libxcb-glx0 \
-        libxcb-keysyms1 \
-        libxcb-image0 \
-        libxcb-icccm4 \
-        libxcb-sync1 \
-        libxcb-util1 \
-        libxcb-xkb1 \
-        libxcb-cursor0 \
-        libx11-xcb1 \
-        libxrender1 \
-        libxi6 \
-        libxkbcommon-x11-0 \
-        gnome-keyring \
-        pkg-config \
-        cmake \
-        libcairo2-dev \
-        python3-dev \
-        build-essential \
-        qtbase5-dev \ 
-        qtbase5-dev-tools && \
+    curl \
+    git \
+    libxcb1 \
+    libxcb-render0 \
+    libxcb-shape0 \
+    libxcb-xfixes0 \
+    libxcb-randr0 \
+    libxcb-glx0 \
+    libxcb-keysyms1 \
+    libxcb-image0 \
+    libxcb-icccm4 \
+    libxcb-sync1 \
+    libxcb-util1 \
+    libxcb-xkb1 \
+    libxcb-cursor0 \
+    libx11-xcb1 \
+    libxrender1 \
+    libxi6 \
+    libxkbcommon-x11-0 \
+    gnome-keyring \
+    pkg-config \
+    cmake \
+    libcairo2-dev \
+    python3-dev \
+    build-essential \
+    qtbase5-dev \ 
+    qtbase5-dev-tools && \
     rm -rf /var/lib/apt/lists/*
 
 ###### ADD MATLAB ######
@@ -166,18 +166,18 @@ RUN wget ${MATLAB_DEPS_REQUIREMENTS_FILE} -O ${MATLAB_DEPS_REQUIREMENTS_FILE_NAM
 
 # Create the .desktop file
 RUN echo '[Desktop Entry]\
-\nVersion=1.0\
-\nType=Application\
-\nName=MATLAB R2023a\
-\nComment=MATLAB R2023a software\
-\nExec=/usr/local/bin/matlab -desktop\
-\nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
-\nTerminal=false\
-\nPath=/srv\
-\nCategories=Development;Simulation;Education;Science;\
-\nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && \
-chmod +x $HOME/Desktop/matlab.desktop && \
-chown 1000:0 $HOME/Desktop/matlab.desktop
+    \nVersion=1.0\
+    \nType=Application\
+    \nName=MATLAB R2023a\
+    \nComment=MATLAB R2023a software\
+    \nExec=/usr/local/bin/matlab -desktop\
+    \nIcon=/opt/matlab/bin/glnxa64/cef_resources/matlab_icon.png\
+    \nTerminal=false\
+    \nPath=/srv\
+    \nCategories=Development;Simulation;Education;Science;\
+    \nStartupNotify=true' >  $HOME/Desktop/matlab.desktop && \
+    chmod +x $HOME/Desktop/matlab.desktop && \
+    chown 1000:0 $HOME/Desktop/matlab.desktop
 
 ENV MLM_LICENSE_FILE=/licenses/license.lic
 
@@ -196,13 +196,14 @@ ENV DEBUG=false \
     KASM_RX_HOME=$STARTUPDIR/kasmrx \
     DONT_PROMPT_WSL_INSTALL="No_Prompt_please" \
     INST_DIR=$STARTUPDIR/install \
-    INST_SCRIPTS="/ubuntu/install/dind/install_dind.sh \
-                  /ubuntu/install/tools/install_tools_deluxe.sh \
-                  /ubuntu/install/misc/install_tools.sh \
-                  /ubuntu/install/chrome/install_chrome.sh \
-                  /ubuntu/install/chromium/install_chromium.sh \
-                  /ubuntu/install/vs_code/install_vs_code.sh \
-                  /ubuntu/install/cleanup/cleanup.sh"
+    INST_SCRIPTS="/ubuntu/install/tools/install_tools_deluxe.sh \
+    /ubuntu/install/misc/install_tools.sh \
+    /ubuntu/install/chrome/install_chrome.sh \
+    /ubuntu/install/chromium/install_chromium.sh \
+    /ubuntu/install/firefox/install_firefox.sh \
+    /ubuntu/install/sublime_text/install_sublime_text.sh \
+    /ubuntu/install/vs_code/install_vs_code.sh \
+    /ubuntu/install/cleanup/cleanup.sh"
 
 # Startup Scripts
 COPY ./src/ubuntu/install/dind/custom_startup.sh $STARTUPDIR/custom_startup.sh
@@ -214,15 +215,15 @@ COPY ./src/ $INST_DIR
 
 # Run installations
 RUN \
-  for SCRIPT in $INST_SCRIPTS; do \
+    for SCRIPT in $INST_SCRIPTS; do \
     bash ${INST_DIR}${SCRIPT}; \
-  done && \
-  $STARTUPDIR/set_user_permission.sh $HOME && \
-  rm -f /etc/X11/xinit/Xclients && \
-  chown 1000:0 $HOME && \
-  mkdir -p /home/kasm-user && \
-  chown -R 1000:0 /home/kasm-user && \
-  rm -Rf ${INST_DIR}
+    done && \
+    $STARTUPDIR/set_user_permission.sh $HOME && \
+    rm -f /etc/X11/xinit/Xclients && \
+    chown 1000:0 $HOME && \
+    mkdir -p /home/kasm-user && \
+    chown -R 1000:0 /home/kasm-user && \
+    rm -Rf ${INST_DIR}
 
 # Install UV
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/

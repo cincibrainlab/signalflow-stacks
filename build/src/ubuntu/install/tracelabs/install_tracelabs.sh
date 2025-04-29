@@ -12,11 +12,12 @@ apt-get install -y \
   faraday \
   fern-wifi-cracker \
   guymager \
-  hydra-gtk \
-  king-phisher \
+  hydra \
   legion \
   ophcrack \
   ophcrack-cli \
+  python3-greenlet \
+  python3-zope.event \
   sqlitebrowser
 
 cd /tmp/
@@ -33,15 +34,14 @@ mv /etc/skel/Desktop/*.pdf $HOME/Desktop/
 
 #### Install all tracelabs image packages ####
 #                                                              rm lines with # | Delete Empty lines | 
-cat kali-config/variant-tracelabs/package-lists/kali.list.chroot | sed '/^#/d' | sed '/^$/d' | xargs --no-run-if-empty apt-get install -y
-
+cat kali-config/variant-tracelabs/package-lists/kali.list.chroot | sed '/^#/d' | sed '/^$/d' | sed '/firefox-esr/d' | xargs --no-run-if-empty apt-get install -y
+sed -i '/m4ll0k/,+3d' kali-config/common/hooks/normal/osint-packages.chroot
 sh kali-config/common/hooks/normal/osint-packages.chroot
 
 chown -R 1000:1000 \
     /usr/share/phoneinfoga \
     /usr/share/Spiderpig \
     /usr/share/DumpsterDiver \
-    /usr/share/Infoga \
     /usr/share/LittleBrother \
     /usr/share/sn0int \
     /usr/share/buster \
@@ -54,13 +54,10 @@ chown -R 1000:1000 \
 
 apt-get install -y python3-pip
 
-pip3 install --break-system-packages --force-reinstall zope.event
-
 sed -i 's/sudo //g' /usr/share/applications/tl*.desktop
 
 ### Remove stuff we install later properly
 apt-get purge -y \
-  firefox-esr \
   chromium
 
 ### Install Pulseaudio once again to remove pipewire
